@@ -6,14 +6,21 @@
 // CONSTANTS
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
-#define LEFT 1
-#define RIGHT 2
 
 typedef struct {
     int rows;
     int cols;
     unsigned char *cells;
 } Map;
+
+//
+// Represents individual matrix values broken into its bit components
+//
+typedef enum {
+    BIT_1 = 1, // Left-most border
+    BIT_2, // Right-most border
+    BIT_3, // Up or Down border
+} BitIndex;
 
 
 //
@@ -35,6 +42,7 @@ int test(const char *fileName){
         return -1;
     }
     // Matrix is Rectangular
+    // TODO not sure if this is needed
     if(rows == cols || rows < 1 || cols < 1){
         fprintf(stderr, "Error wrong matrix dimensions");
         fclose(file);
@@ -113,6 +121,7 @@ int initialize_map(Map **map, const char *fileName){
     (*map)->rows = rows;
     (*map)->cols = cols;
 
+    // Allocates memory needed for all fields of the matrix
     (*map)->cells = (unsigned char *) malloc(sizeof(unsigned char) * rows * cols);
     if((*map)->cells == NULL){
         fprintf(stderr, "Malloc failed on cells\n");
@@ -159,6 +168,9 @@ int get_cell_value(Map *map, int rowIndex, int columnIndex){
     return (int)map->cells[rowIndex*map->cols + columnIndex];
 }
 
+//
+// Prints entire already initialized matrix saved inside Map sturcture
+//
 void print_entire_matrix(Map *map){
 
     for(int i = 1; i <= map->rows; i++){
@@ -168,7 +180,38 @@ void print_entire_matrix(Map *map){
         printf("\n");
     }
 }
-bool isborder(Map *map, int r, int c, int border);
+
+// Uses bitwise operations to determine a 0 / 1 value of a bit from a number
+bool isolate_bitValue(unsigned eval, BitIndex bit){
+    unsigned mask = 1U << (sizeof(unsigned) * 8 - bit);
+    return eval & mask ? true : false;
+}
+
+bool isborder(Map *map, int r, int c, int border){
+    
+    int cell = get_cell_value(map, r, c);
+    if(cell == -1){
+        fprintf(stderr, "Error cell [%d] isn't valid\n", cell);
+    }
+    unsigned cellValue = (unsigned) cell;
+    
+    switch(border){
+        case BIT_1:
+            return isolate_bitValue(cellValue, BIT_1);
+        break;
+        case BIT_2:
+            return isolate_bitValue(cellValue, BIT_2);
+        break;
+        case BIT_3:
+            return isolate_bitValue(cellValue, BIT_3);
+        break;
+    }
+
+    // To avoid warnings
+    fprintf(stderr, "Error border could not be determined\n");
+    return true;
+}
+
 int start_border(Map *map, int r, int c, int leftright);
 
 void printHelp(){
