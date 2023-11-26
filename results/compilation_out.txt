@@ -1,0 +1,27 @@
+maze.c: In function ‘initialize_map’:
+maze.c:63:24: error: unused parameter ‘rows’ [-Werror=unused-parameter]
+   63 | int initialize_map(int rows, int cols, Map *map, FILE *file){
+      |                    ~~~~^~~~
+maze.c:63:34: error: unused parameter ‘cols’ [-Werror=unused-parameter]
+   63 | int initialize_map(int rows, int cols, Map *map, FILE *file){
+      |                              ~~~~^~~~
+maze.c:63:45: error: unused parameter ‘map’ [-Werror=unused-parameter]
+   63 | int initialize_map(int rows, int cols, Map *map, FILE *file){
+      |                                        ~~~~~^~~
+maze.c:63:56: error: unused parameter ‘file’ [-Werror=unused-parameter]
+   63 | int initialize_map(int rows, int cols, Map *map, FILE *file){
+      |                                                  ~~~~~~^~~~
+maze.c: In function ‘main’:
+maze.c:101:9: error: variable ‘leftright’ set but not used [-Werror=unused-but-set-variable]
+  101 |     int leftright = 0;
+      |         ^~~~~~~~~
+maze.c:100:19: error: variable ‘posC’ set but not used [-Werror=unused-but-set-variable]
+  100 |     int posR = 0, posC = 0;
+      |                   ^~~~
+maze.c:100:9: error: variable ‘posR’ set but not used [-Werror=unused-but-set-variable]
+  100 |     int posR = 0, posC = 0;
+      |         ^~~~
+maze.c:99:9: error: unused variable ‘map’ [-Werror=unused-variable]
+   99 |     Map map;
+      |         ^~~
+cc1: all warnings being treated as errors

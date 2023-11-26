@@ -60,7 +60,42 @@ int test(FILE *file){
 
     return 0;
 }
-int initialize_map(int rows, int cols, Map *map, FILE *file){
+int initialize_map(Map **map, FILE *file){
+    if(test(file) == -1){
+        return -1;
+    }
+
+    int rows = 0, cols = 0;
+
+    if(fscanf(file, "%d %d", &rows, &cols) != 2){
+        fprintf(stderr, "Error reading rows and cols from file\n");
+        return -1;
+    }
+
+    int numOfCells = rows*cols;
+
+    // Allocates the correct size of predefined struct Map
+    *map = malloc(sizeof(int)*2+sizeof(unsigned char *));
+    if(*map == NULL){
+        fprintf(stderr, "Malloc failed\n");
+        return -1;
+    }
+    (*map)->rows = rows;
+    (*map)->cols = cols;
+    (*map)->cells = (unsigned char *) malloc(sizeof(unsigned char) * rows * cols);
+    if((*map)->cells == NULL){
+        fprintf(stderr, "Malloc failed on cells\n");
+        return -1;
+    }
+    for(int cellIndex = 0; cellIndex < numOfCells; cellIndex++){
+        unsigned char readValue;
+        if(fscanf(file, "%hhu", &readValue) != 1){ // %hhu - specifier for uchar :O
+            fprintf(stderr, "Error reading row from file\n");
+            return -1;
+        }
+        (*map)->cells[cellIndex] = readValue;
+    }
+    
     return 0;
 }
 
