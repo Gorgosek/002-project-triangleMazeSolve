@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-// int main() exit values constants
+// CONSTANTS
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
 #define LEFT 1
@@ -15,7 +15,10 @@ typedef struct {
     unsigned char *cells;
 } Map;
 
+
+//
 // Checks if the contents and format of a file is Valid or Invalid for defining a matrix
+//
 int test(const char *fileName){
 
     int rows, cols;
@@ -73,7 +76,10 @@ int test(const char *fileName){
     return 0;
 }
 
-// Tests data contained in file, allocates Map and initializes it using data cointained in file.
+
+//
+// Initializes Map structure and cells array, validates correctness of data contained in file (using function test), allocates Map and unsigned char *cells
+//
 int initialize_map(Map **map, const char *fileName){
     if(test(fileName) == -1){
         return -1;
@@ -129,18 +135,39 @@ int initialize_map(Map **map, const char *fileName){
     return 0;
 }
 
+// Destructor for Map structure
+void free_map(Map *map){
+    if(map != NULL) {
+        free(map->cells);
+        free(map);
+    } 
+}
+
+
+//
 // Returns a value of a cell at row and column index like an array would
+//
 int get_cell_value(Map *map, int rowIndex, int columnIndex){
     // Index meaning 0 - x < rows 
-    if(rowIndex >= map->rows || columnIndex >= map->cols){
+    if(rowIndex > map->rows || columnIndex > map->cols || rowIndex <= 0 || columnIndex <= 0){
         fprintf(stderr, "Error row or column out of bounds\n");
         return -1;
     }
+    rowIndex--;
+    columnIndex--;
 
     return (int)map->cells[rowIndex*map->cols + columnIndex];
 }
 
+void print_entire_matrix(Map *map){
 
+    for(int i = 1; i <= map->rows; i++){
+        for(int j = 1; j <= map->cols; j++){
+            printf(" %d", get_cell_value(map, i, j));
+        }
+        printf("\n");
+    }
+}
 bool isborder(Map *map, int r, int c, int border);
 int start_border(Map *map, int r, int c, int leftright);
 
@@ -210,12 +237,7 @@ int main(int argc, char *argv[])
             if(x == -1){
                 return EXIT_FAILURE;
             }
-            for(int i = 0; i <= posR; i++){
-                for(int j = 0; j <= posC; j++){
-                    printf(" %d", get_cell_value(map, i, j));
-                }
-                printf("\n");
-            }
+            print_entire_matrix(map);
 
         }
         if(argc == 5 && strcmp(argv[argNum], "--lpath") == 0){
