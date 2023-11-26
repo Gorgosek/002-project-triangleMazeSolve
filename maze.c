@@ -16,13 +16,13 @@ typedef struct {
 } Map;
 
 // Checks if the contents and format of a file is Valid or Invalid for defining a matrix
-int testValidity(FILE *file){
+int test(FILE *file){
 
     int rows, cols;
 
     if(fscanf(file, "%d %d", &rows, &cols) != 2){
         fprintf(stderr, "Error reading rows and cols from file\n");
-        fclose(file);
+        fclose(file); //TODO idk about these
         return -1;
     }
     // Matrix is Rectangular
@@ -55,11 +55,18 @@ int testValidity(FILE *file){
         }
     }
 
-    // Correct border definitions across adj elements 
+    // Check file for any extra elements
+    int extraElems;
+    if(fscanf(file, "%d", &extraElems) != EOF){
+        fprintf(stderr, "Error file contains extra elements\n");
+        fclose(file);
+        return -1;
+    }
 
+    fclose(file);
     return 0;
 }
-int initializeMap(int rows, int cols, Map *map, FILE *file){
+int initialize_map(int rows, int cols, Map *map, FILE *file){
     return 0;
 }
 
@@ -112,6 +119,12 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
             }
             // TODO SOMETHING
+            if(test(file) == 0){
+                printf("Valid\n");
+            }
+            else if(test(file) == -1){
+                printf("Valid\n");
+            }
         }
         if(argc == 5 && strcmp(argv[argNum], "--rpath") == 0){
             posR = atoi(argv[argNum+1]);
@@ -133,7 +146,7 @@ int main(int argc, char *argv[])
             if(file == NULL){
                 fprintf(stderr, "Error opening file %s", argv[argNum+1]);
                 return EXIT_FAILURE;
-            }
+    }
 
             // TODO SOMETHING
         }

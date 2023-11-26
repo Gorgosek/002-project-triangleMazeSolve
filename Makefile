@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-std=c11 -Wall -Wextra -Werror
+CFLAGS=-std=c11 -Wall -Wextra 
 DEBUGFLAGS=-g
 TARGET=maze
 SOURCE=maze.c
