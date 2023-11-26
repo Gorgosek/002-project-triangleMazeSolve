@@ -22,13 +22,11 @@ int test(FILE *file){
 
     if(fscanf(file, "%d %d", &rows, &cols) != 2){
         fprintf(stderr, "Error reading rows and cols from file\n");
-        fclose(file); //TODO idk about these
         return -1;
     }
     // Matrix is Rectangular
     if(rows == cols || rows < 1 || cols < 1){
         fprintf(stderr, "Error wrong matrix dimensions");
-        fclose(file);
         return -1;
     }
 
@@ -42,14 +40,12 @@ int test(FILE *file){
                 readCount++;
             } else{
                 fprintf(stderr, "Error reading row from file\n");
-                fclose(file);
                 return -1;
             }
 
             // Check if an element is in bounds of 3 bits
-            if(matrix[row][col] >= 0 && matrix[row][col] <= 7){
-                fprintf(stderr, "Error reading row from file\n");
-                fclose(file);
+            if(!(matrix[row][col] >= 0 && matrix[row][col] <= 7)){
+                fprintf(stderr, "Error row %d from file is out of bounds: [%d] != (0-7)\n", row, matrix[row][col]);
                 return -1;
             }
         }
@@ -59,11 +55,9 @@ int test(FILE *file){
     int extraElems;
     if(fscanf(file, "%d", &extraElems) != EOF){
         fprintf(stderr, "Error file contains extra elements\n");
-        fclose(file);
         return -1;
     }
 
-    fclose(file);
     return 0;
 }
 int initialize_map(int rows, int cols, Map *map, FILE *file){
@@ -116,15 +110,19 @@ int main(int argc, char *argv[])
             file = fopen(argv[argNum+1], "r"); // next argv is a filename
             if(file == NULL){
                 fprintf(stderr, "Error opening file %s\n", argv[argNum+1]);
+                fclose(file);
                 return EXIT_FAILURE;
             }
             // TODO SOMETHING
-            if(test(file) == 0){
+            int testResult = test(file);
+            if(testResult == 0){
                 printf("Valid\n");
             }
-            else if(test(file) == -1){
-                printf("Valid\n");
+            else if(testResult == -1){
+                printf("Invalid\n");
             }
+            fclose(file);
+            return EXIT_SUCCESS;
         }
         if(argc == 5 && strcmp(argv[argNum], "--rpath") == 0){
             posR = atoi(argv[argNum+1]);
