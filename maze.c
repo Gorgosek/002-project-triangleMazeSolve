@@ -14,7 +14,7 @@ typedef struct {
 } Map;
 
 //
-// Represents individual matrix values broken into its bit components
+// Represents bit indexes borders
 //
 typedef enum {
     BIT_1 = 1, // Left-most border
@@ -26,7 +26,8 @@ typedef enum {
 //
 // Checks if the contents and format of a file is Valid or Invalid for defining a matrix
 //
-int test(const char *fileName){
+int test(const char *fileName)
+{
 
     int rows, cols;
     FILE *file = fopen(fileName, "r");
@@ -88,7 +89,8 @@ int test(const char *fileName){
 //
 // Initializes Map structure and cells array, validates correctness of data contained in file (using function test), allocates Map and unsigned char *cells
 //
-int initialize_map(Map **map, const char *fileName){
+int initialize_map(Map **map, const char *fileName)
+{
     if(test(fileName) == -1){
         return -1;
     }
@@ -145,7 +147,8 @@ int initialize_map(Map **map, const char *fileName){
 }
 
 // Destructor for Map structure
-void free_map(Map *map){
+void free_map(Map *map)
+{
     if(map != NULL) {
         free(map->cells);
         free(map);
@@ -156,7 +159,8 @@ void free_map(Map *map){
 //
 // Returns a value of a cell at row and column index like an array would
 //
-int get_cell_value(Map *map, int rowIndex, int columnIndex){
+int get_cell_value(Map *map, int rowIndex, int columnIndex)
+{
     // Index meaning 0 - x < rows 
     if(rowIndex > map->rows || columnIndex > map->cols || rowIndex <= 0 || columnIndex <= 0){
         fprintf(stderr, "Error row or column out of bounds\n");
@@ -171,23 +175,26 @@ int get_cell_value(Map *map, int rowIndex, int columnIndex){
 //
 // Prints entire already initialized matrix saved inside Map sturcture
 //
-void print_entire_matrix(Map *map){
+void print_entire_matrix(Map *map)
+{
 
-    for(int i = 1; i <= map->rows; i++){
-        for(int j = 1; j <= map->cols; j++){
-            printf(" %d", get_cell_value(map, i, j));
+    for(int row = 1; row <= map->rows; row++){
+        for(int column = 1; column <= map->cols; column++){
+            printf(" %d", get_cell_value(map, row, column));
         }
         printf("\n");
     }
 }
 
-// Uses bitwise operations to determine a 0 / 1 value of a bit from a number
-bool isolate_bitValue(unsigned eval, BitIndex bit){
+// Uses bitwise operations to determine a 0 / 1 state of a bit from a number
+bool isolate_bitValue(unsigned eval, BitIndex bit)
+{
     unsigned mask = 1U << (sizeof(unsigned) * 8 - bit);
     return eval & mask ? true : false;
 }
 
-bool isborder(Map *map, int r, int c, int border){
+bool isborder(Map *map, int r, int c, int border)
+{
     
     int cell = get_cell_value(map, r, c);
     if(cell == -1){
@@ -212,9 +219,55 @@ bool isborder(Map *map, int r, int c, int border){
     return true;
 }
 
-int start_border(Map *map, int r, int c, int leftright);
+//
+// Symbolizes all possible directions for which to solve maze
+// Used as an Identifier for RIGHT or LEFT hand rule
+// 
+//
+typedef enum {
+    L, // LEFT 
+    R, // RIGHT
+    U, // UP - odd row at 1. col
+    D, // DOWN - even row at 1. col
+} Direction;
 
-void printHelp(){
+// Determines if a triangle points up or down
+//
+int triangle_type(Map *map, int r, int c)
+{
+    if(r <= 0 || c <= 0){
+        fprintf(stderr, "Error triangle_type couldn't be determined r or c are out of bounds\n");
+        return -1;
+    }
+
+    // Even Row
+    if(r % 2 == 0){
+        if(c % 2 == 1)
+            return D; // Has a DOWN border
+        else
+            return U; // Has an UP border
+    }
+
+    // Odd Row
+    if(r % 2 == 1){
+        if(c % 2 == 0)
+            return U; // Has an UP border
+        else
+            return D; // Has a DOWN border
+    }
+        
+    fprintf(stderr, "Error triangle_type couldn't be determined r or c are out of bounds\n");
+    return -1;
+}
+
+int start_border(Map *map, int r, int c, int leftright)
+{
+    
+
+}
+
+void printHelp()
+{
     printf("%s",
            "Triangular Maze Solver Program\n"
            "-------------------\n"
@@ -266,7 +319,7 @@ int main(int argc, char *argv[])
             return EXIT_SUCCESS;
         }
         if(argc == 5 && strcmp(argv[argNum], "--rpath") == 0){
-            leftright = RIGHT;
+            leftright = R;
             posR = atoi(argv[argNum+1]);
             posC = atoi(argv[argNum+2]);
             fileName = argv[argNum+3];
@@ -284,7 +337,7 @@ int main(int argc, char *argv[])
 
         }
         if(argc == 5 && strcmp(argv[argNum], "--lpath") == 0){
-            leftright = LEFT;
+            leftright = L;
             posR = atoi(argv[argNum+1]);
             posC = atoi(argv[argNum+2]);
             fileName = argv[argNum+3];
