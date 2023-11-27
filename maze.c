@@ -266,19 +266,30 @@ typedef struct {
     int c;
 } Position;
 
-//int start_border(Map *map, int r, int c, int leftright)
-//{
-//    switch(leftright){
-//        case L:
-//            break;
-//        case R:
-//
-//
-//            break;
-//    }
-//    
-//
-//}
+// TODO continue
+int start_border(Map *map, int r, int c, int leftright)
+{
+    switch(leftright){
+        case L:
+            break;
+        case R:
+            // L-> R
+            // L-> D
+            // R-> U
+            // R-> L
+            // U-> L
+            // D-> R
+            if(triangle_type(r, c) == D){
+                isborder(map, r, c, BIT_1);
+            }
+
+
+            break;
+    }
+    
+    return -1;
+
+}
 
 void printHelp()
 {
