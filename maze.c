@@ -231,9 +231,10 @@ typedef enum {
     D, // DOWN - even row at 1. col
 } Direction;
 
+//
 // Determines if a triangle points up or down
 //
-int triangle_type(Map *map, int r, int c)
+int triangle_type(int r, int c)
 {
     if(r <= 0 || c <= 0){
         fprintf(stderr, "Error triangle_type couldn't be determined r or c are out of bounds\n");
@@ -260,11 +261,24 @@ int triangle_type(Map *map, int r, int c)
     return -1;
 }
 
-int start_border(Map *map, int r, int c, int leftright)
-{
-    
+typedef struct {
+    int r;
+    int c;
+} Position;
 
-}
+//int start_border(Map *map, int r, int c, int leftright)
+//{
+//    switch(leftright){
+//        case L:
+//            break;
+//        case R:
+//
+//
+//            break;
+//    }
+//    
+//
+//}
 
 void printHelp()
 {
@@ -298,7 +312,7 @@ int main(int argc, char *argv[])
     }
     Map *map;
     int posR = 0, posC = 0;
-    int leftright = 0;
+    //int leftright = 0;
     const char *fileName;
     for(int argNum = 1; argNum < argc; argNum++){
         if(argc == 2 && strcmp(argv[argNum], "--help") == 0){
@@ -319,7 +333,7 @@ int main(int argc, char *argv[])
             return EXIT_SUCCESS;
         }
         if(argc == 5 && strcmp(argv[argNum], "--rpath") == 0){
-            leftright = R;
+     //       leftright = R;
             posR = atoi(argv[argNum+1]);
             posC = atoi(argv[argNum+2]);
             fileName = argv[argNum+3];
@@ -337,7 +351,7 @@ int main(int argc, char *argv[])
 
         }
         if(argc == 5 && strcmp(argv[argNum], "--lpath") == 0){
-            leftright = L;
+      //      leftright = L;
             posR = atoi(argv[argNum+1]);
             posC = atoi(argv[argNum+2]);
             fileName = argv[argNum+3];
