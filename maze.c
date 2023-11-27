@@ -17,9 +17,9 @@ typedef struct {
 // Represents bit indexes borders
 //
 typedef enum {
-    BIT_1 = 1, // Left-most border
-    BIT_2, // Right-most border
-    BIT_3, // Up or Down border
+    LEFT_BIT = 1, // Left-most border
+    RIGHT_BIT, // Right-most border
+    UPDOWN_BIT, // Up or Down border
 } BitIndex;
 
 
@@ -173,7 +173,7 @@ int get_cell_value(Map *map, int rowIndex, int columnIndex)
 }
 
 //
-// Prints entire already initialized matrix saved inside Map sturcture
+// Prints entire already initialized matrix saved inside Map structure
 //
 void print_entire_matrix(Map *map)
 {
@@ -203,14 +203,14 @@ bool isborder(Map *map, int r, int c, int border)
     unsigned cellValue = (unsigned) cell;
     
     switch(border){
-        case BIT_1:
-            return isolate_bitValue(cellValue, BIT_1);
+        case LEFT_BIT:
+            return isolate_bitValue(cellValue, LEFT_BIT);
         break;
-        case BIT_2:
-            return isolate_bitValue(cellValue, BIT_2);
+        case RIGHT_BIT:
+            return isolate_bitValue(cellValue, RIGHT_BIT);
         break;
-        case BIT_3:
-            return isolate_bitValue(cellValue, BIT_3);
+        case UPDOWN_BIT:
+            return isolate_bitValue(cellValue, UPDOWN_BIT);
         break;
     }
 
@@ -225,7 +225,7 @@ bool isborder(Map *map, int r, int c, int border)
 // 
 //
 typedef enum {
-    L, // LEFT 
+    L = 1, // LEFT 
     R, // RIGHT
     U, // UP - odd row at 1. col
     D, // DOWN - even row at 1. col
@@ -266,9 +266,82 @@ typedef struct {
     int c;
 } Position;
 
+typedef struct{
+    Position pos;
+    Direction borderPos[3];
+} BordersAtPos;
+
+// TODO use this mb?
+typedef struct{
+    BordersAtPos checkBorders;
+    int triangleType; 
+    int result[3];
+} TriangleBorders;
+
+
 // TODO continue
 int start_border(Map *map, int r, int c, int leftright)
 {
+    // Checks if starting cell is one of the outermost elements of the matrix
+    if(!(r < map->rows || r > 0) && c == 1){
+        if(!(c < map->cols || c > 0) && r == 1){
+            fprintf(stderr, "Error starting row and column values aren't correct\n");
+            return -1;
+        }
+    }
+
+    BordersAtPos matrixCorners[4] = {
+        {{1, 1}, {U, L, 0}},                    // Top-Left Corner
+        {{1, map->cols}, {U, R, 0}},            // Top-Right Corner 
+        {{map->rows, 1}, {D, L, 0}},            // Bottom-Left Corner 
+        {{map->rows, map->cols}, {D, R, 0}}     // Bottom-Right Corner 
+    };
+
+    int cornerIndex = -1;
+    for(int tryCorners = 0; tryCorners < 4; tryCorners++){
+        if(r == matrixCorners[tryCorners].pos.r && c == matrixCorners[tryCorners].pos.c){
+            cornerIndex = tryCorners;
+            break;
+        }
+    }
+
+    Direction checkDirections[3] = {0, 0, 0}; // Array stating which directions to check later
+    int numOfDirectionsToCheck = 0;
+    int triangleType = -1;
+
+    // Determine triangleType
+    triangleType = triangle_type(r,c);
+
+    // Position isn't in a corner
+    if(cornerIndex == -1){
+        // LEFT SIDE
+        if(c == 1){
+            checkDirections[0] = L;
+            numOfDirectionsToCheck++;
+        }
+        // RIGHT SIDE
+        if(c == map->cols){
+            checkDirections[0] = R;
+            numOfDirectionsToCheck++;
+        }
+        // TOP SIDE - triangleType has to have an upper border
+        if(r == 1 && triangleType == U){
+            checkDirections[0] = U;
+            numOfDirectionsToCheck++;
+        }
+        // BOTTOM SIDE - triangleType has to have a bottom border denoted as D for DOWN
+        if(r == map->rows && triangleType == D){
+            checkDirections[0] = D;
+            numOfDirectionsToCheck++;
+        }
+        
+    // Position is in a corner
+    } else {
+        numOfDirectionsToCheck = 2;
+        memcpy(checkDirections, matrixCorners[cornerIndex].borderPos, sizeof(checkDirections)); // Copies data of borderPositions in corners
+    }
+    // Determine which borders to check ->
+
     switch(leftright){
         case L:
             break;
@@ -279,9 +352,7 @@ int start_border(Map *map, int r, int c, int leftright)
             // R-> L
             // U-> L
             // D-> R
-            if(triangle_type(r, c) == D){
-                isborder(map, r, c, BIT_1);
-            }
+            
 
 
             break;
