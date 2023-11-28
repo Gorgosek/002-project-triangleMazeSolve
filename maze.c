@@ -35,6 +35,8 @@ typedef enum {
     D, // DOWN - even row at 1. col
 } Direction;
 
+// ? TRY
+Map *map;
 //
 // Checks if the contents and format of a file is Valid or Invalid for defining a matrix
 //
@@ -270,14 +272,7 @@ typedef struct {
     int c;
 } Position;
 
-// Uses [Direction] as a means of changing the r and c values
-// TODO put in a move function?
-const Position directionVector[4] = {
-    {0, -1},    // move LEFT
-    {0, 1},     // move RIGHT
-    {-1, 0},    // move UP
-    {1, 0},     // move DOWN
-};
+
 
 typedef enum {
     CONTAINS_UP,
@@ -393,17 +388,38 @@ bool is_maze_boundary(Triangle triangle, Direction checkDirection)
 
 }
 
+//TODO remove if not needed for start_border later on
 typedef struct{
     Position pos;
     Direction borderPos[3];
 } BordersAtPos;
 
+// Uses [Direction] as a means of changing the r and c values
+// TODO put in a move function?
+const Position directionVector[4] = {
+    {0, -1},    // move LEFT
+    {0, 1},     // move RIGHT
+    {-1, 0},    // move UP
+    {1, 0},     // move DOWN
+};
+
+// ? TRY
+// Returns a new triangle moved over to the specified direction
+Triangle switch_to_triangle_in_direction(Map *map, Triangle *triangle, Direction direction)
+{
+    Triangle resultingTriangle;
+    
+    // Uses direction - 1 to account for enum starting at L=1
+    initialize_triangle(map, &resultingTriangle, triangle->pos.r + directionVector[direction-1].r,triangle->pos.c + directionVector[direction-1].c);
+    return resultingTriangle;
+
+}
 
 // TODO continue
-int start_border(Map *map, int r, int c, int leftright)
-{
-    return -1;
-}
+//int start_border(Map *map, int r, int c, int leftright)
+//{
+//    return -1;
+//}
 
 void printHelp()
 {
@@ -435,7 +451,6 @@ int main(int argc, char *argv[])
     if(argc < 2){
         return EXIT_FAILURE;
     }
-    Map *map;
     int posR = 0, posC = 0;
     //int leftright = 0;
     const char *fileName;
