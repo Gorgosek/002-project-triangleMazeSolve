@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <math.h>
 
 // CONSTANTS
 #define EXIT_SUCCESS 0
@@ -235,6 +236,7 @@ bool isborder(Map *map, int r, int c, int border)
 
 //
 // Determines if a triangle points up or down
+// In other words if triangle contains an UPPER or an LOWER BOUND
 //
 int triangle_type(int r, int c)
 {
@@ -267,6 +269,98 @@ typedef struct {
     int r;
     int c;
 } Position;
+
+typedef enum {
+    CONTAINS_UP,
+    CONTAINS_DOWN,
+} TriangleType;
+
+typedef struct {
+    Position pos;
+    unsigned borderValue; // Derived from cells inside map
+    unsigned mazeBoundary; // 3 bit value representing which side is a boundary and therefore leads to victory or is able to be entered if it hasn't got a border
+    TriangleType type;
+} Triangle;
+
+// OPPS FIX
+int determine_triangle_type(Position pos){
+    if(pos.r <= 0 || pos.c <= 0){
+        fprintf(stderr, "Error triangle type couldn't be determined pos.r or pos.c are out of bounds\n");
+        return -1;
+    }
+
+    // Even Row
+    if(pos.r % 2 == 0){
+        if(pos.c % 2 == 1)
+            return CONTAINS_DOWN; // Has a DOWN border
+        else
+            return CONTAINS_UP; // Has an UP border
+    }
+
+    // Odd Row
+    if(pos.r % 2 == 1){
+        if(pos.c % 2 == 0)
+            return CONTAINS_UP; // Has an UP border
+        else
+            return CONTAINS_DOWN; // Has a DOWN border
+    }
+        
+    fprintf(stderr, "Error triangle type couldn't be determined pos.r or pos.c are out of bounds\n");
+    return -1;
+}
+int initialize_triangle(Map *map, int r, int c){
+    //TODO
+    return 0;
+}
+//
+// Sets the maze boundary of an triangle returns a unsigned DEC value of 0-7
+//
+int determine_maze_boundary(Map *map, Triangle triangle)
+{
+    unsigned mazeBoundary = 0;
+    int r = triangle.pos.r, c = triangle.pos.c;
+    if(r < 1 || c < 1){
+        fprintf(stderr, "Error couldn't read position of triangle\n");
+    }
+
+    if(r == 1 && triangle.type == CONTAINS_UP){
+        mazeBoundary += pow(2, UPDOWN_BIT);
+    } else if(r == map->rows && triangle.type == CONTAINS_DOWN){
+        mazeBoundary += pow(2, UPDOWN_BIT);
+    }
+
+    if(c == 1){
+        mazeBoundary += pow(2, LEFT_BIT);
+    } else if(c == map->cols){
+        mazeBoundary += pow(2, RIGHT_BIT);
+    }
+    
+    return mazeBoundary;
+}
+
+bool is_maze_boundary(Triangle triangle, Direction checkDirection){
+    
+    unsigned mazeBoundary = triangle.mazeBoundary;
+    
+    switch(checkDirection){
+        case L:
+            return isolate_bit_value(mazeBoundary, LEFT_BIT);
+        break;
+        case R:
+            return isolate_bit_value(mazeBoundary, RIGHT_BIT);
+        break;
+        case U:
+            return isolate_bit_value(mazeBoundary, UPDOWN_BIT);
+        case D:
+            return isolate_bit_value(mazeBoundary, UPDOWN_BIT);
+        break;
+    }
+
+    // To avoid warnings
+    fprintf(stderr, "Error triangle boundary could not be determined\n");
+    return false;
+
+}
 
 typedef struct{
     Position pos;
