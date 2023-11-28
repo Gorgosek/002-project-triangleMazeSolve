@@ -150,7 +150,7 @@ void free_map(Map *map)
 int get_cell_value(Map *map, int rowIndex, int columnIndex)
 {
     // Index meaning 0 - x < rows 
-    if(rowIndex > map->rows || columnIndex > map->cols || rowIndex <= 0 || columnIndex <= 0){
+    if(rowIndex > map->rows || columnIndex > map->cols || rowIndex < 1 || columnIndex < 1){
         fprintf(stderr, "Error row or column out of bounds\n");
         return -1;
     }
@@ -177,7 +177,7 @@ void print_entire_matrix(Map *map)
 // Uses bitwise operations to determine a 0 / 1 state of a bit from a number
 bool isolate_bit_value(unsigned eval, BitIndex bit)
 {
-    unsigned mask = 1U << (sizeof(unsigned) * 8 - bit);
+    unsigned mask = 1U << bit;
     return eval & mask ? true : false;
 }
 
