@@ -22,6 +22,17 @@ typedef enum {
     UPDOWN_BIT, // Up or Down border
 } BitIndex;
 
+//
+// Symbolizes all possible directions for which to solve maze
+// Used as an Identifier for RIGHT or LEFT hand rule
+// 
+//
+typedef enum {
+    L = 1, // LEFT 
+    R, // RIGHT
+    U, // UP - odd row at 1. col
+    D, // DOWN - even row at 1. col
+} Direction;
 
 //
 // Checks if the contents and format of a file is Valid or Invalid for defining a matrix
@@ -203,13 +214,15 @@ bool isborder(Map *map, int r, int c, int border)
     unsigned cellValue = (unsigned) cell;
     
     switch(border){
-        case LEFT_BIT:
+        case L:
             return isolate_bitValue(cellValue, LEFT_BIT);
         break;
-        case RIGHT_BIT:
+        case R:
             return isolate_bitValue(cellValue, RIGHT_BIT);
         break;
-        case UPDOWN_BIT:
+        case U:
+            return isolate_bitValue(cellValue, UPDOWN_BIT);
+        case D:
             return isolate_bitValue(cellValue, UPDOWN_BIT);
         break;
     }
@@ -219,17 +232,6 @@ bool isborder(Map *map, int r, int c, int border)
     return true;
 }
 
-//
-// Symbolizes all possible directions for which to solve maze
-// Used as an Identifier for RIGHT or LEFT hand rule
-// 
-//
-typedef enum {
-    L = 1, // LEFT 
-    R, // RIGHT
-    U, // UP - odd row at 1. col
-    D, // DOWN - even row at 1. col
-} Direction;
 
 //
 // Determines if a triangle points up or down
@@ -282,19 +284,21 @@ typedef struct{
 // TODO continue
 int start_border(Map *map, int r, int c, int leftright)
 {
+    static int timesUsed = 0;
     // Checks if starting cell is one of the outermost elements of the matrix
     if(!(r < map->rows || r > 0) && c == 1){
         if(!(c < map->cols || c > 0) && r == 1){
             fprintf(stderr, "Error starting row and column values aren't correct\n");
+            timesUsed++;
             return -1;
         }
     }
 
     BordersAtPos matrixCorners[4] = {
-        {{1, 1}, {U, L, 0}},                    // Top-Left Corner
-        {{1, map->cols}, {U, R, 0}},            // Top-Right Corner 
-        {{map->rows, 1}, {D, L, 0}},            // Bottom-Left Corner 
-        {{map->rows, map->cols}, {D, R, 0}}     // Bottom-Right Corner 
+        {{1, 1}, {L, U, 0}},                    // Top-Left Corner
+        {{1, map->cols}, {R, U, 0}},            // Top-Right Corner 
+        {{map->rows, 1}, {L, D, 0}},            // Bottom-Left Corner 
+        {{map->rows, map->cols}, {R, D, 0}}     // Bottom-Right Corner 
     };
 
     int cornerIndex = -1;
@@ -340,6 +344,27 @@ int start_border(Map *map, int r, int c, int leftright)
         numOfDirectionsToCheck = 2;
         memcpy(checkDirections, matrixCorners[cornerIndex].borderPos, sizeof(checkDirections)); // Copies data of borderPositions in corners
     }
+    
+    if(numOfDirectionsToCheck == 0){
+        fprintf(stderr, "Error couldn't determine a correct entrance\n");
+        timesUsed++;
+        return -1;
+    }
+
+    Direction chosenDirection = 0;
+
+    for(int tryDirections = 0; tryDirections < numOfDirectionsToCheck; tryDirections++){
+        if(isborder(map, r, c, checkDirections[tryDirections]) == false){
+            chosenDirection = checkDirections[tryDirections];
+        }
+    }
+
+    if(chosenDirection == 0){
+        fprintf(stderr, "Error couldn't determine an unobstructed entrance\n");
+        timesUsed++;
+        return -1;
+    }
+
     // Determine which borders to check ->
 
     switch(leftright){
@@ -352,12 +377,23 @@ int start_border(Map *map, int r, int c, int leftright)
             // R-> L
             // U-> L
             // D-> R
+            switch(chosenDirection){
+                case L:
+                    if(isborder(map, r, c, R) == false){
+                        return R;
+                    }
+                    if(isborder(map, r, c, L) == false){
+                        return R;
+                    }
+                break;
+            }
             
 
 
             break;
     }
     
+    timesUsed++;
     return -1;
 
 }
