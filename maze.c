@@ -286,17 +286,25 @@ typedef enum {
 
 typedef struct {
     Position pos;
+    TriangleType type;
     unsigned borderValue; // Derived from cells inside map
     unsigned mazeBoundary; // 3 bit value representing which side is a boundary and therefore leads to victory or is able to be entered if it hasn't got a border
-    TriangleType type;
 } Triangle;
 
 // OPPS FIX
-int determine_triangle_type(Position pos){
-    if(pos.r <= 0 || pos.c <= 0){
+// WORKS!
+int determine_triangle_type(Position pos)
+{
+    if(pos.r < 1 || pos.c < 1){
         fprintf(stderr, "Error triangle type couldn't be determined pos.r or pos.c are out of bounds\n");
         return -1;
     }
+    //if(pos.r == 1){
+    //    if(pos.c % 2 == 1)
+    //        return CONTAINS_UP;
+    //    else
+    //     return CONTAINS_DOWN;
+    //}
 
     // Even Row
     if(pos.r % 2 == 0){
@@ -309,18 +317,15 @@ int determine_triangle_type(Position pos){
     // Odd Row
     if(pos.r % 2 == 1){
         if(pos.c % 2 == 0)
-            return CONTAINS_UP; // Has an UP border
-        else
             return CONTAINS_DOWN; // Has a DOWN border
+        else
+            return CONTAINS_UP; // Has an UP border
     }
         
     fprintf(stderr, "Error triangle type couldn't be determined pos.r or pos.c are out of bounds\n");
     return -1;
 }
-int initialize_triangle(Map *map, int r, int c){
-    //TODO
-    return 0;
-}
+
 //
 // Sets the maze boundary of an triangle returns a DEC value of 0-7
 //
@@ -348,7 +353,23 @@ int determine_maze_boundary(Map *map, Triangle triangle)
     return mazeBoundary;
 }
 
-bool is_maze_boundary(Triangle triangle, Direction checkDirection){
+void initialize_triangle(Map *map, Triangle *triangle, int r, int c)
+{
+    if(r < 1 || c < 1){
+        fprintf(stderr, "Error initializing triangle\n");
+        return;
+    }
+    //TODO
+    triangle->pos.r = r;
+    triangle->pos.c = c;
+    triangle->type = determine_triangle_type(triangle->pos);
+    triangle->borderValue = get_cell_value(map, r, c);
+    triangle->mazeBoundary = determine_maze_boundary(map, *triangle);
+}
+
+//WORKS!
+bool is_maze_boundary(Triangle triangle, Direction checkDirection)
+{
     
     unsigned mazeBoundary = triangle.mazeBoundary;
     
@@ -377,129 +398,11 @@ typedef struct{
     Direction borderPos[3];
 } BordersAtPos;
 
-// TODO use this mb?
-typedef struct{
-    BordersAtPos checkBorders;
-    int triangleType; 
-    int result[3];
-} TriangleBorders;
-
 
 // TODO continue
 int start_border(Map *map, int r, int c, int leftright)
 {
-    static int timesUsed = 0;
-    // Checks if starting cell is one of the outermost elements of the matrix
-    if(!(r < map->rows || r > 0) && c == 1){
-        if(!(c < map->cols || c > 0) && r == 1){
-            fprintf(stderr, "Error starting row and column values aren't correct\n");
-            timesUsed++;
-            return -1;
-        }
-    }
-
-    BordersAtPos matrixCorners[4] = {
-        {{1, 1}, {L, U, 0}},                    // Top-Left Corner
-        {{1, map->cols}, {R, U, 0}},            // Top-Right Corner 
-        {{map->rows, 1}, {L, D, 0}},            // Bottom-Left Corner 
-        {{map->rows, map->cols}, {R, D, 0}}     // Bottom-Right Corner 
-    };
-
-    int cornerIndex = -1;
-    for(int tryCorners = 0; tryCorners < 4; tryCorners++){
-        if(r == matrixCorners[tryCorners].pos.r && c == matrixCorners[tryCorners].pos.c){
-            cornerIndex = tryCorners;
-            break;
-        }
-    }
-
-    Direction checkDirections[3] = {0, 0, 0}; // Array stating which directions to check later
-    int numOfDirectionsToCheck = 0;
-    int triangleType = -1;
-
-    // Determine triangleType
-    triangleType = triangle_type(r,c);
-
-    // Position isn't in a corner
-    if(cornerIndex == -1){
-        // LEFT SIDE
-        if(c == 1){
-            checkDirections[0] = L;
-            numOfDirectionsToCheck++;
-        }
-        // RIGHT SIDE
-        if(c == map->cols){
-            checkDirections[0] = R;
-            numOfDirectionsToCheck++;
-        }
-        // TOP SIDE - triangleType has to have an upper border
-        if(r == 1 && triangleType == U){
-            checkDirections[0] = U;
-            numOfDirectionsToCheck++;
-        }
-        // BOTTOM SIDE - triangleType has to have a bottom border denoted as D for DOWN
-        if(r == map->rows && triangleType == D){
-            checkDirections[0] = D;
-            numOfDirectionsToCheck++;
-        }
-        
-    // Position is in a corner
-    } else {
-        numOfDirectionsToCheck = 2;
-        memcpy(checkDirections, matrixCorners[cornerIndex].borderPos, sizeof(checkDirections)); // Copies data of borderPositions in corners
-    }
-    
-    if(numOfDirectionsToCheck == 0){
-        fprintf(stderr, "Error couldn't determine a correct entrance\n");
-        timesUsed++;
-        return -1;
-    }
-
-    Direction chosenDirection = 0;
-
-    for(int tryDirections = 0; tryDirections < numOfDirectionsToCheck; tryDirections++){
-        if(isborder(map, r, c, checkDirections[tryDirections]) == false){
-            chosenDirection = checkDirections[tryDirections];
-        }
-    }
-
-    if(chosenDirection == 0){
-        fprintf(stderr, "Error couldn't determine an unobstructed entrance\n");
-        timesUsed++;
-        return -1;
-    }
-
-    // Determine which borders to check ->
-
-    switch(leftright){
-        case L:
-            break;
-        case R:
-            // L-> R
-            // L-> D
-            // R-> U
-            // R-> L
-            // U-> L
-            // D-> R
-            switch(chosenDirection){
-                case L:
-                    if(isborder(map, r, c, R) == false){
-                        return R;
-                    }
-                    if(isborder(map, r, c, L) == false){
-                        return R;
-                    }
-                break;
-            }
-            
-
-
-            break;
-    }
-    
-    timesUsed++;
     return -1;
-
 }
 
 void printHelp()
@@ -577,6 +480,16 @@ int main(int argc, char *argv[])
             posR = atoi(argv[argNum+1]);
             posC = atoi(argv[argNum+2]);
             fileName = argv[argNum+3];
+            Triangle triangle;
+            if(initialize_map(&map, fileName) == -1){
+                return EXIT_FAILURE;
+            }
+            initialize_triangle(map, &triangle, posR, posC);
+
+            printf("%s", determine_triangle_type(triangle.pos) == CONTAINS_UP ? "UP": "DOWN");
+            printf("%s", is_maze_boundary(triangle, L) ? "YES": "NO");
+
+
         }
 
         // TODO SOMETHING
