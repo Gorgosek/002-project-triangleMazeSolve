@@ -17,7 +17,7 @@ typedef struct {
 // Represents bit indexes borders
 //
 typedef enum {
-    LEFT_BIT = 1, // Left-most border
+    LEFT_BIT, // Left-most border
     RIGHT_BIT, // Right-most border
     UPDOWN_BIT, // Up or Down border
 } BitIndex;
@@ -198,7 +198,7 @@ void print_entire_matrix(Map *map)
 }
 
 // Uses bitwise operations to determine a 0 / 1 state of a bit from a number
-bool isolate_bitValue(unsigned eval, BitIndex bit)
+bool isolate_bit_value(unsigned eval, BitIndex bit)
 {
     unsigned mask = 1U << (sizeof(unsigned) * 8 - bit);
     return eval & mask ? true : false;
@@ -215,15 +215,15 @@ bool isborder(Map *map, int r, int c, int border)
     
     switch(border){
         case L:
-            return isolate_bitValue(cellValue, LEFT_BIT);
+            return isolate_bit_value(cellValue, LEFT_BIT);
         break;
         case R:
-            return isolate_bitValue(cellValue, RIGHT_BIT);
+            return isolate_bit_value(cellValue, RIGHT_BIT);
         break;
         case U:
-            return isolate_bitValue(cellValue, UPDOWN_BIT);
+            return isolate_bit_value(cellValue, UPDOWN_BIT);
         case D:
-            return isolate_bitValue(cellValue, UPDOWN_BIT);
+            return isolate_bit_value(cellValue, UPDOWN_BIT);
         break;
     }
 
