@@ -270,6 +270,15 @@ typedef struct {
     int c;
 } Position;
 
+// Uses [Direction] as a means of changing the r and c values
+// TODO put in a move function?
+const Position directionVector[4] = {
+    {0, -1},    // move LEFT
+    {0, 1},     // move RIGHT
+    {-1, 0},    // move UP
+    {1, 0},     // move DOWN
+};
+
 typedef enum {
     CONTAINS_UP,
     CONTAINS_DOWN,
@@ -313,7 +322,7 @@ int initialize_triangle(Map *map, int r, int c){
     return 0;
 }
 //
-// Sets the maze boundary of an triangle returns a unsigned DEC value of 0-7
+// Sets the maze boundary of an triangle returns a DEC value of 0-7
 //
 int determine_maze_boundary(Map *map, Triangle triangle)
 {
@@ -321,10 +330,11 @@ int determine_maze_boundary(Map *map, Triangle triangle)
     int r = triangle.pos.r, c = triangle.pos.c;
     if(r < 1 || c < 1){
         fprintf(stderr, "Error couldn't read position of triangle\n");
+        return -1;
     }
 
     if(r == 1 && triangle.type == CONTAINS_UP){
-        mazeBoundary += pow(2, UPDOWN_BIT);
+        mazeBoundary += pow(2, UPDOWN_BIT);     // Adds correct DEC value corresponding to the bit
     } else if(r == map->rows && triangle.type == CONTAINS_DOWN){
         mazeBoundary += pow(2, UPDOWN_BIT);
     }
