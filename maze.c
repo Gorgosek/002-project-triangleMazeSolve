@@ -14,20 +14,14 @@ typedef struct {
     unsigned char *cells;
 } Map;
 
-//
-// Represents bit indexes borders
-//
+// Represents bit indexes borders needed values from 0-2
 typedef enum {
     LEFT_BIT, // Left-most border
     RIGHT_BIT, // Right-most border
     UPDOWN_BIT, // Up or Down border
 } BitIndex;
 
-//
 // Symbolizes all possible directions for which to solve maze
-// Used as an Identifier for RIGHT or LEFT hand rule
-// 
-//
 typedef enum {
     L = 1, // LEFT 
     R, // RIGHT
@@ -35,80 +29,60 @@ typedef enum {
     D, // DOWN - even row at 1. col
 } Direction;
 
+typedef struct {
+    int r;
+    int c;
+} Position;
+
+// Used in determine_triangle_type func.
+typedef enum {
+    CONTAINS_UP,
+    CONTAINS_DOWN,
+} TriangleType;
+
+// Defines a triangle
+typedef struct {
+    Position pos;
+    TriangleType type;
+    unsigned borderValue; // Derived from cells inside map
+    unsigned mazeBoundary; // Explaines sides of a triangle that act as outside maze boundaries
+} Triangle;
+
 // ? TRY
 Map *map;
-//
-// Checks if the contents and format of a file is Valid or Invalid for defining a matrix
-//
-int test(const char *fileName)
+
+
+
+// Prints help onto the screen when using --help option
+void printHelp()
 {
-
-    int rows, cols;
-    FILE *file = fopen(fileName, "r");
-    if(file == NULL){
-        fprintf(stderr, "Error opening file\n");
-        fclose(file);
-        return -1;
-    }
-
-    if(fscanf(file, "%d %d", &rows, &cols) != 2){
-        fprintf(stderr, "Error reading rows and cols from file\n");
-        fclose(file);
-        return -1;
-    }
-    // Matrix is Rectangular
-    // TODO not sure if this is needed
-    if(rows == cols || rows < 1 || cols < 1){
-        fprintf(stderr, "Error wrong matrix dimensions");
-        fclose(file);
-        return -1;
-    }
-
-    int matrix[rows][cols];
-
-    // Checks if a row contains a valid amount of elements and if the provided elements are in bounds
-    for(int row = 0; row < rows; row++){
-        int readCount = 0;
-        for(int col = 0; col < cols; col++){
-            if(fscanf(file, "%d", &matrix[row][col]) == 1){
-                readCount++;
-            } else{
-                fprintf(stderr, "Error reading row from file\n");
-                fclose(file);
-                return -1;
-            }
-
-            // Check if an element is in bounds of 3 bits
-            if(!(matrix[row][col] >= 0 && matrix[row][col] <= 7)){
-                fprintf(stderr, "Error row %d from file is out of bounds: [%d] != (0-7)\n", row, matrix[row][col]);
-                fclose(file);
-                return -1;
-            }
-        }
-    }
-
-    // Check file for any extra elements
-    int extraElems;
-    if(fscanf(file, "%d", &extraElems) != EOF){
-        fprintf(stderr, "Error file contains extra elements\n");
-        fclose(file);
-        return -1;
-    }
-
-    fclose(file);
-    return 0;
+    printf("%s",
+           "Triangular Maze Solver Program\n"
+           "-------------------\n"
+           "\n"
+           "maze is a program that solves a triangular maze using either the right or left hand rules.\n"
+           "\n"
+           "Usage: ./maze [OPTION]\n"
+           "  --help            Shows help info\n"
+           "  --test file.txt   Tests the validity of a file. Prints either 'Valid' or 'Invalid'.\n"
+           "  --rpath R C file.txt\n"
+           "                    Solves the maze using the right hand rule.\n"
+           "                    R(INT) and C(INT) specify the row and column of the starting position.\n"
+           "                    'file.txt'(FILE) is a matrix of the maze to be solved.\n"
+           "  --lpath R C file.txt\n"
+           "                    Solves the maze using the left hand rule.\n"
+           "                    R(INT) and C(INT) specify the row and column of the starting position.\n"
+           "                    'file.txt'(FILE) is a matrix of the maze to be solved.\n"
+           "  --shortest R C file.txt\n"
+           "                    Finds the shortest path in the maze.\n"
+           "                    R(INT) and C(INT) specify the row and column of the starting position.\n"
+           "                    'file.txt'(FILE) is a matrix of the maze to be solved.\n"
+           );
 }
 
-
-//
 // Initializes Map structure and cells array, validates correctness of data contained in file (using function test), allocates Map and unsigned char *cells
-//
 int initialize_map(Map **map, const char *fileName)
 {
-    if(test(fileName) == -1){
-        return -1;
-    }
-
     FILE *file = fopen(fileName, "r");
     if(file == NULL){
         fprintf(stderr, "Error opening file\n");
@@ -240,51 +214,33 @@ bool isborder(Map *map, int r, int c, int border)
 // Determines if a triangle points up or down
 // In other words if triangle contains an UPPER or an LOWER BOUND
 //
-int triangle_type(int r, int c)
-{
-    if(r <= 0 || c <= 0){
-        fprintf(stderr, "Error triangle_type couldn't be determined r or c are out of bounds\n");
-        return -1;
-    }
+//int triangle_type(int r, int c)
+//{
+//    if(r <= 0 || c <= 0){
+//        fprintf(stderr, "Error triangle_type couldn't be determined r or c are out of bounds\n");
+//        return -1;
+//    }
+//
+//    // Even Row
+//    if(r % 2 == 0){
+//        if(c % 2 == 1)
+//            return D; // Has a DOWN border
+//        else
+//            return U; // Has an UP border
+//    }
+//
+//    // Odd Row
+//    if(r % 2 == 1){
+//        if(c % 2 == 0)
+//            return U; // Has an UP border
+//        else
+//            return D; // Has a DOWN border
+//    }
+//        
+//    fprintf(stderr, "Error triangle_type couldn't be determined r or c are out of bounds\n");
+//    return -1;
+//}
 
-    // Even Row
-    if(r % 2 == 0){
-        if(c % 2 == 1)
-            return D; // Has a DOWN border
-        else
-            return U; // Has an UP border
-    }
-
-    // Odd Row
-    if(r % 2 == 1){
-        if(c % 2 == 0)
-            return U; // Has an UP border
-        else
-            return D; // Has a DOWN border
-    }
-        
-    fprintf(stderr, "Error triangle_type couldn't be determined r or c are out of bounds\n");
-    return -1;
-}
-
-typedef struct {
-    int r;
-    int c;
-} Position;
-
-
-
-typedef enum {
-    CONTAINS_UP,
-    CONTAINS_DOWN,
-} TriangleType;
-
-typedef struct {
-    Position pos;
-    TriangleType type;
-    unsigned borderValue; // Derived from cells inside map
-    unsigned mazeBoundary; // 3 bit value representing which side is a boundary and therefore leads to victory or is able to be entered if it hasn't got a border
-} Triangle;
 
 // OPPS FIX
 // WORKS!
@@ -420,60 +376,130 @@ Triangle switch_to_triangle_in_direction(Map *map, Triangle *triangle, Direction
 //{
 //    return -1;
 //}
-
-void printHelp()
+//
+// Checks if the contents and format of a file is Valid or Invalid for defining a matrix
+//
+int test(const char *fileName)
 {
-    printf("%s",
-           "Triangular Maze Solver Program\n"
-           "-------------------\n"
-           "\n"
-           "maze is a program that solves a triangular maze using either the right or left hand rules.\n"
-           "\n"
-           "Usage: ./maze [OPTION]\n"
-           "  --help            Shows help info\n"
-           "  --test file.txt   Tests the validity of a file. Prints either 'Valid' or 'Invalid'.\n"
-           "  --rpath R C file.txt\n"
-           "                    Solves the maze using the right hand rule.\n"
-           "                    R(INT) and C(INT) specify the row and column of the starting position.\n"
-           "                    'file.txt'(FILE) is a matrix of the maze to be solved.\n"
-           "  --lpath R C file.txt\n"
-           "                    Solves the maze using the left hand rule.\n"
-           "                    R(INT) and C(INT) specify the row and column of the starting position.\n"
-           "                    'file.txt'(FILE) is a matrix of the maze to be solved.\n"
-           "  --shortest R C file.txt\n"
-           "                    Finds the shortest path in the maze.\n"
-           "                    R(INT) and C(INT) specify the row and column of the starting position.\n"
-           "                    'file.txt'(FILE) is a matrix of the maze to be solved.\n"
-           );
+
+    int rows, cols;
+    FILE *file = fopen(fileName, "r");
+    if(file == NULL){
+        fprintf(stderr, "Error opening file\n");
+        fclose(file);
+        return -1;
+    }
+
+    if(fscanf(file, "%d %d", &rows, &cols) != 2){
+        fprintf(stderr, "Error reading rows and cols from file\n");
+        fclose(file);
+        return -1;
+    }
+    // Matrix is Rectangular
+    // TODO not sure if this is needed
+    if(rows == cols || rows < 1 || cols < 1){
+        fprintf(stderr, "Error wrong matrix dimensions");
+        fclose(file);
+        return -1;
+    }
+
+    int matrix[rows][cols];
+
+    // Checks if a row contains a valid amount of elements and if the provided elements are in bounds
+    for(int row = 0; row < rows; row++){
+        int readCount = 0;
+        for(int col = 0; col < cols; col++){
+            if(fscanf(file, "%d", &matrix[row][col]) == 1){
+                readCount++;
+            } else{
+                fprintf(stderr, "Error reading row from file\n");
+                fclose(file);
+                return -1;
+            }
+
+            // Check if an element is in bounds of 3 bits
+            if(!(matrix[row][col] >= 0 && matrix[row][col] <= 7)){
+                fprintf(stderr, "Error row %d from file is out of bounds: [%d] != (0-7)\n", row, matrix[row][col]);
+                fclose(file);
+                return -1;
+            }
+        }
+    }
+
+    // Check file for any extra elements
+    int extraElems;
+    if(fscanf(file, "%d", &extraElems) != EOF){
+        fprintf(stderr, "Error file contains extra elements\n");
+        fclose(file);
+        return -1;
+    }
+
+    fclose(file);
+
+    //
+    // CHECK VALID CORRESPONDING BORDERS
+    //
+
+    if(initialize_map(&map, fileName) == -1){
+        return -1;
+    }
+
+    Triangle triangle; 
+    Triangle iterTriangle;
+
+    // Check left/right
+    for(int row = 1; row <= map->rows; row++){
+        for(int col = 2; col <= map->cols; col++){
+            initialize_triangle(map, &triangle, row, col); // One ahead 
+            initialize_triangle(map, &iterTriangle, row, col-1); // One behind
+            if(isborder(map, iterTriangle.pos.r, iterTriangle.pos.c, R) != isborder(map, triangle.pos.r, triangle.pos.c, L)){
+                fprintf(stderr, "Error borders aren't defined correctly\n");
+                return -1;
+            }
+        }
+    }
+    
+    // Check Up/Down
+    for(int row = 2; row <= map->rows; row++){
+        for(int col = 1; col <= map->cols; col++){
+            initialize_triangle(map, &triangle, row-1, col); // above iterTriangle
+            initialize_triangle(map, &iterTriangle, row, col); // underneath triangle
+            if(determine_triangle_type(triangle.pos) == CONTAINS_DOWN && determine_triangle_type(iterTriangle.pos) == CONTAINS_UP){
+                if(isborder(map, iterTriangle.pos.r, iterTriangle.pos.c, U) != isborder(map, triangle.pos.r, triangle.pos.c, D)){
+                    fprintf(stderr, "Error borders aren't defined correctly\n");
+                    return -1;
+                }
+
+            }
+        }
+    }
+    return 0;
 }
+
 int main(int argc, char *argv[])
 {
     if(argc < 2){
         return EXIT_FAILURE;
     }
+
+    // Variables used, Global Variable Map *map; is also being used
     int posR = 0, posC = 0;
-    //int leftright = 0;
     const char *fileName;
+
     for(int argNum = 1; argNum < argc; argNum++){
         if(argc == 2 && strcmp(argv[argNum], "--help") == 0){
             printHelp();
             return EXIT_SUCCESS;
         }
+        
         // checks for --test filename mandatory arg
         if(argc == 3 && strcmp(argv[argNum], "--test") == 0){
             fileName = argv[argNum+1];
             // TODO SOMETHING
-            int testResult = test(fileName);
-            if(testResult == 0){
-                printf("Valid\n");
-            }
-            else if(testResult == -1){
-                printf("Invalid\n");
-            }
+            printf("%s\n", test(fileName) == 0 ? "Valid" : "Invalid");
             return EXIT_SUCCESS;
         }
         if(argc == 5 && strcmp(argv[argNum], "--rpath") == 0){
-     //       leftright = R;
             posR = atoi(argv[argNum+1]);
             posC = atoi(argv[argNum+2]);
             fileName = argv[argNum+3];
@@ -491,7 +517,6 @@ int main(int argc, char *argv[])
 
         }
         if(argc == 5 && strcmp(argv[argNum], "--lpath") == 0){
-      //      leftright = L;
             posR = atoi(argv[argNum+1]);
             posC = atoi(argv[argNum+2]);
             fileName = argv[argNum+3];
