@@ -360,12 +360,6 @@ const Position directionVector[4] = {
 // Returns a new triangle moved over to the specified direction
 int triangle_move_in(Map *map, Triangle *triangleToMove, Triangle *resultingTriangle, Direction direction)
 {
-    // Default values
-    Triangle defaultTriangle = {{1,1}, CONTAINS_UP, 7, 5};
-
-    int nextR = triangleToMove->pos.r;
-    int nextC = triangleToMove->pos.c;
-    
     if(triangleToMove->type == CONTAINS_UP && direction == U){
     } else if(triangleToMove->type == CONTAINS_DOWN && direction == D){
     } else if(direction != U || direction != D){
@@ -572,9 +566,13 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
             }
             initialize_triangle(map, &triangle, posR, posC);
-            moveRight = switch_to_triangle_in_direction(map, &triangle, R);
+            int directionTest;
+            printf("Test directions L1 R2 U3 D4: ");
+            scanf("%d", &directionTest);
 
-            printf("%d %d, %s, %d %d \n", moveRight.pos.r,moveRight.pos.c, moveRight.type == CONTAINS_UP ? "UP" : "DOWN", moveRight.borderValue, moveRight.mazeBoundary);
+            int state = triangle_move_in(map, &triangle, &moveRight, (Direction)directionTest);
+
+            printf("%d\n%d %d, %s, %d %d \n",state, moveRight.pos.r,moveRight.pos.c, moveRight.type == CONTAINS_UP ? "UP" : "DOWN", moveRight.borderValue, moveRight.mazeBoundary);
 
             // printf("%s", determine_triangle_type(triangle.pos) == CONTAINS_UP ? "UP": "DOWN");
             // printf("%s", is_maze_boundary(triangle, L) ? "YES": "NO");
