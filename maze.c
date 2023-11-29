@@ -51,8 +51,6 @@ typedef struct {
 // ? TRY
 Map *map;
 
-
-
 // Prints help onto the screen when using --help option
 void printHelp()
 {
@@ -351,7 +349,6 @@ typedef struct{
 } BordersAtPos;
 
 // Uses [Direction] as a means of changing the r and c values
-// TODO put in a move function?
 const Position directionVector[4] = {
     {0, -1},    // move LEFT
     {0, 1},     // move RIGHT
@@ -361,13 +358,60 @@ const Position directionVector[4] = {
 
 // ? TRY
 // Returns a new triangle moved over to the specified direction
-Triangle switch_to_triangle_in_direction(Map *map, Triangle *triangle, Direction direction)
+int triangle_move_in(Map *map, Triangle *triangleToMove, Triangle *resultingTriangle, Direction direction)
 {
-    Triangle resultingTriangle;
+    // Default values
+    Triangle defaultTriangle = {{1,1}, CONTAINS_UP, 7, 5};
+
+    int nextR = triangleToMove->pos.r;
+    int nextC = triangleToMove->pos.c;
+    
+    if(triangleToMove->type == CONTAINS_UP && direction == U){
+    } else if(triangleToMove->type == CONTAINS_DOWN && direction == D){
+    } else if(direction != U || direction != D){
+    } else {
+        fprintf(stderr, "Error cannot move in that direction wrong TriangleType\n");
+        return -1;
+    }
+    bool isBorderInDirection = isborder(map, triangleToMove->pos.r, triangleToMove->pos.c, direction);
+
+    if(isBorderInDirection){
+        fprintf(stderr, "Error cannot move in that direction border is in a way\n");
+        return -1;
+    }
+    
+    // Illegal states
+    if(triangleToMove->pos.c == 1 && triangleToMove->pos.r == 1 && (direction == L || direction == U)){
+        fprintf(stderr, "Error cannot move in that direction\n");
+        return 1;
+    }
+    if(triangleToMove->pos.c == map->cols && triangleToMove->pos.r == map->rows && (direction == R || direction == D)){
+        fprintf(stderr, "Error cannot move in that direction\n");
+        return 1;
+    }
+
+    // TODO should I implement change direction in here?
+    // Might signify a win FIX HANDLE IT!
+    if(triangleToMove->pos.c == map->cols && direction == R){
+        //fprintf(stderr, "Error cannot move in that direction\n");
+        return 1;
+    }
+    if(triangleToMove->pos.c == 1 && direction == L){
+        //fprintf(stderr, "Error cannot move in that direction\n");
+        return 1;
+    }
+    if(triangleToMove->pos.r == map->rows && direction == D){
+        //fprintf(stderr, "Error cannot move in that direction\n");
+        return 1;
+    }
+    if(triangleToMove->pos.r == 1 && direction == U){
+        //fprintf(stderr, "Error cannot move in that direction\n");
+        return 1;
+    }
     
     // Uses direction - 1 to account for enum starting at L=1
-    initialize_triangle(map, &resultingTriangle, triangle->pos.r + directionVector[direction-1].r,triangle->pos.c + directionVector[direction-1].c);
-    return resultingTriangle;
+    initialize_triangle(map, resultingTriangle, triangleToMove->pos.r + directionVector[direction-1].r,triangleToMove->pos.c + directionVector[direction-1].c);
+    return 0;
 
 }
 
@@ -486,6 +530,7 @@ int main(int argc, char *argv[])
     int posR = 0, posC = 0;
     const char *fileName;
 
+    // REMAKE
     for(int argNum = 1; argNum < argc; argNum++){
         if(argc == 2 && strcmp(argv[argNum], "--help") == 0){
             printHelp();
@@ -495,7 +540,6 @@ int main(int argc, char *argv[])
         // checks for --test filename mandatory arg
         if(argc == 3 && strcmp(argv[argNum], "--test") == 0){
             fileName = argv[argNum+1];
-            // TODO SOMETHING
             printf("%s\n", test(fileName) == 0 ? "Valid" : "Invalid");
             return EXIT_SUCCESS;
         }
@@ -520,14 +564,20 @@ int main(int argc, char *argv[])
             posR = atoi(argv[argNum+1]);
             posC = atoi(argv[argNum+2]);
             fileName = argv[argNum+3];
+
+            // TESTING
             Triangle triangle;
+            Triangle moveRight;
             if(initialize_map(&map, fileName) == -1){
                 return EXIT_FAILURE;
             }
             initialize_triangle(map, &triangle, posR, posC);
+            moveRight = switch_to_triangle_in_direction(map, &triangle, R);
 
-            printf("%s", determine_triangle_type(triangle.pos) == CONTAINS_UP ? "UP": "DOWN");
-            printf("%s", is_maze_boundary(triangle, L) ? "YES": "NO");
+            printf("%d %d, %s, %d %d \n", moveRight.pos.r,moveRight.pos.c, moveRight.type == CONTAINS_UP ? "UP" : "DOWN", moveRight.borderValue, moveRight.mazeBoundary);
+
+            // printf("%s", determine_triangle_type(triangle.pos) == CONTAINS_UP ? "UP": "DOWN");
+            // printf("%s", is_maze_boundary(triangle, L) ? "YES": "NO");
 
 
         }
