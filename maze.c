@@ -27,6 +27,8 @@ typedef enum {
     R, // RIGHT
     U, // UP - odd row at 1. col
     D, // DOWN - even row at 1. col
+    NUM_OF_DIRECTIONS,
+
 } Direction;
 
 typedef struct {
@@ -330,6 +332,10 @@ const Position directionVector[4] = {
 int triangle_move_in(Map *map, Triangle triangleToMove, Triangle *resultingTriangle, Direction direction)
 {
     // Checks if a triangle even has a side to move to 
+    if(direction > D || direction < L){
+        fprintf(stderr, "Error direction value doesn't exist\n");
+        return -1;
+    }
     if(triangleToMove.type == CONTAINS_UP && direction == D){
         fprintf(stderr, "Error cannot move in that direction wrong TriangleType\n");
         return -1;
@@ -399,6 +405,7 @@ int test(const char *fileName)
         fclose(file);
         return -1;
     }
+    
     // Matrix is Rectangular
     // TODO not sure if this is needed
     if(rows == cols || rows < 1 || cols < 1){
@@ -430,18 +437,10 @@ int test(const char *fileName)
         }
     }
 
-    // Check file for any extra elements
-    int extraElems;
-    if(fscanf(file, "%d", &extraElems) != EOF){
-        fprintf(stderr, "Error file contains extra elements\n");
-        fclose(file);
-        return -1;
-    }
-
     fclose(file);
 
     //
-    // CHECK IF NEIGHBORING BORDERS ARE VALID
+    // CHECK IF NEIGHBORING BORDERS ARE SET CORRECTLY
     //
 
     if(map_ctor(&map, fileName) == -1){
@@ -481,6 +480,17 @@ int test(const char *fileName)
         }
     }
     return 0;
+}
+
+// Used for --rpath a --lpath
+int search_maze(Map *map, int r, int c, int leftRight)
+{
+    Triangle startTriangle;
+    initialize_triangle(map, &startTriangle, r, c);
+    Direction rPathDirOrder[] = {0, };
+
+    
+
 }
 
 int main(int argc, char *argv[])
@@ -544,7 +554,7 @@ int main(int argc, char *argv[])
 
             int state = triangle_move_in(map, triangle, &moveRight, (Direction)directionTest);
 
-            printf("%d\n%d %d, %s, %d %d \n",state, moveRight.pos.r,moveRight.pos.c, moveRight.type == CONTAINS_UP ? "UP" : "DOWN", moveRight.borderValue, moveRight.mazeBoundary);
+            printf("%d\n%d\n%d %d, %s, %d %d \n",state, (Direction)directionTest, moveRight.pos.r,moveRight.pos.c, moveRight.type == CONTAINS_UP ? "UP" : "DOWN", moveRight.borderValue, moveRight.mazeBoundary);
 
             // printf("%s", determine_triangle_type(triangle.pos) == CONTAINS_UP ? "UP": "DOWN");
             // printf("%s", is_maze_boundary(triangle, L) ? "YES": "NO");
