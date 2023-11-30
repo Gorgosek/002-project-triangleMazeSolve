@@ -34,7 +34,9 @@ typedef struct {
     int c;
 } Position;
 
-// Used in determine_triangle_type func.
+// Used in determine_triangle_type func. 
+// CONTAINS_UP = Triangle contains an UP border => DOWN pointing triangle
+// CONTAINS_UP = Triangle contains a DOWN border => UP pointing triangle
 typedef enum {
     CONTAINS_UP,
     CONTAINS_DOWN,
@@ -48,7 +50,7 @@ typedef struct {
     unsigned mazeBoundary; // Explaines sides of a triangle that act as outside maze boundaries
 } Triangle;
 
-// ? TRY
+// A Global variable that can be initialized by using map_ctor function
 Map *map;
 
 // Prints help onto the screen when using --help option
@@ -79,7 +81,7 @@ void printHelp()
 }
 
 // Initializes Map structure and cells array, validates correctness of data contained in file (using function test), allocates Map and unsigned char *cells
-int initialize_map(Map **map, const char *fileName)
+int map_ctor(Map **map, const char *fileName)
 {
     FILE *file = fopen(fileName, "r");
     if(file == NULL){
@@ -127,16 +129,17 @@ int initialize_map(Map **map, const char *fileName)
         (*map)->cells[cellIndex] = readValue;
     }
     
-    //TODO free these fuckers somehow
     fclose(file);
     return 0;
 }
 
 // Destructor for Map structure
-void free_map(Map *map)
+void map_dtor(Map **map)
 {
     if(map != NULL) {
-        free(map->cells);
+        (*map)->rows = 0;
+        (*map)->rows = 0;
+        free((*map)->cells);
         free(map);
     } 
 }
@@ -172,13 +175,18 @@ void print_entire_matrix(Map *map)
     }
 }
 
+//
 // Uses bitwise operations to determine a 0 / 1 state of a bit from a number
+//
 bool isolate_bit_value(unsigned eval, BitIndex bit)
 {
     unsigned mask = 1U << bit;
     return eval & mask ? true : false;
 }
 
+//
+// Determines if a border is present in a certain Direction 
+//
 bool isborder(Map *map, int r, int c, int border)
 {
     
@@ -209,51 +217,14 @@ bool isborder(Map *map, int r, int c, int border)
 
 
 //
-// Determines if a triangle points up or down
-// In other words if triangle contains an UPPER or an LOWER BOUND
+// Returns a value of TriangleType
 //
-//int triangle_type(int r, int c)
-//{
-//    if(r <= 0 || c <= 0){
-//        fprintf(stderr, "Error triangle_type couldn't be determined r or c are out of bounds\n");
-//        return -1;
-//    }
-//
-//    // Even Row
-//    if(r % 2 == 0){
-//        if(c % 2 == 1)
-//            return D; // Has a DOWN border
-//        else
-//            return U; // Has an UP border
-//    }
-//
-//    // Odd Row
-//    if(r % 2 == 1){
-//        if(c % 2 == 0)
-//            return U; // Has an UP border
-//        else
-//            return D; // Has a DOWN border
-//    }
-//        
-//    fprintf(stderr, "Error triangle_type couldn't be determined r or c are out of bounds\n");
-//    return -1;
-//}
-
-
-// OPPS FIX
-// WORKS!
 int determine_triangle_type(Position pos)
 {
     if(pos.r < 1 || pos.c < 1){
         fprintf(stderr, "Error triangle type couldn't be determined pos.r or pos.c are out of bounds\n");
         return -1;
     }
-    //if(pos.r == 1){
-    //    if(pos.c % 2 == 1)
-    //        return CONTAINS_UP;
-    //    else
-    //     return CONTAINS_DOWN;
-    //}
 
     // Even Row
     if(pos.r % 2 == 0){
@@ -308,7 +279,7 @@ void initialize_triangle(Map *map, Triangle *triangle, int r, int c)
         fprintf(stderr, "Error initializing triangle\n");
         return;
     }
-    //TODO
+    // Initializes all necesarry values
     triangle->pos.r = r;
     triangle->pos.c = c;
     triangle->type = determine_triangle_type(triangle->pos);
@@ -316,7 +287,7 @@ void initialize_triangle(Map *map, Triangle *triangle, int r, int c)
     triangle->mazeBoundary = determine_maze_boundary(map, *triangle);
 }
 
-//WORKS!
+// Checks if a side in direction is a boundary of the maze using triangle.mazeBoundary values defined in determine_maze_boundary
 bool is_maze_boundary(Triangle triangle, Direction checkDirection)
 {
     
@@ -339,14 +310,7 @@ bool is_maze_boundary(Triangle triangle, Direction checkDirection)
     // To avoid warnings
     fprintf(stderr, "Error triangle boundary could not be determined\n");
     return false;
-
 }
-
-//TODO remove if not needed for start_border later on
-typedef struct{
-    Position pos;
-    Direction borderPos[3];
-} BordersAtPos;
 
 // Uses [Direction] as a means of changing the r and c values
 const Position directionVector[4] = {
@@ -356,8 +320,12 @@ const Position directionVector[4] = {
     {1, 0},     // move DOWN
 };
 
-// ? TRY
-// Returns a new triangle moved over to the specified direction
+// Returns a value signifying whether a resultingTriangle has been set correctly
+/* 
+ *   -1 = ERROR
+ *    0 = SUCCESS
+ *    1 = triangle would've moved outside maze
+*/
 int triangle_move_in(Map *map, Triangle *triangleToMove, Triangle *resultingTriangle, Direction direction)
 {
     if(triangleToMove->type == CONTAINS_UP && direction == U){
@@ -384,8 +352,7 @@ int triangle_move_in(Map *map, Triangle *triangleToMove, Triangle *resultingTria
         return 1;
     }
 
-    // TODO should I implement change direction in here?
-    // Might signify a win FIX HANDLE IT!
+    // resultingTriangle would've moved outside the maze resulting in the completion of the maze
     if(triangleToMove->pos.c == map->cols && direction == R){
         //fprintf(stderr, "Error cannot move in that direction\n");
         return 1;
@@ -475,10 +442,11 @@ int test(const char *fileName)
     fclose(file);
 
     //
-    // CHECK VALID CORRESPONDING BORDERS
+    // CHECK IF NEIGHBORING BORDERS ARE VALID
     //
 
-    if(initialize_map(&map, fileName) == -1){
+    if(map_ctor(&map, fileName) == -1){
+        map_dtor(&map);
         return -1;
     }
 
@@ -492,6 +460,7 @@ int test(const char *fileName)
             initialize_triangle(map, &iterTriangle, row, col-1); // One behind
             if(isborder(map, iterTriangle.pos.r, iterTriangle.pos.c, R) != isborder(map, triangle.pos.r, triangle.pos.c, L)){
                 fprintf(stderr, "Error borders aren't defined correctly\n");
+                map_dtor(&map);
                 return -1;
             }
         }
@@ -505,6 +474,7 @@ int test(const char *fileName)
             if(determine_triangle_type(triangle.pos) == CONTAINS_DOWN && determine_triangle_type(iterTriangle.pos) == CONTAINS_UP){
                 if(isborder(map, iterTriangle.pos.r, iterTriangle.pos.c, U) != isborder(map, triangle.pos.r, triangle.pos.c, D)){
                     fprintf(stderr, "Error borders aren't defined correctly\n");
+                    map_dtor(&map);
                     return -1;
                 }
 
@@ -544,7 +514,9 @@ int main(int argc, char *argv[])
 
             // TODO SOMETHING
             // JUST TRYING OUT 
-            if(initialize_map(&map, fileName) == -1){
+
+            test(fileName);
+            if(map_ctor(&map, fileName) == -1){
                 return EXIT_FAILURE;
             }
             int x = get_cell_value(map, posR, posC);
@@ -562,7 +534,7 @@ int main(int argc, char *argv[])
             // TESTING
             Triangle triangle;
             Triangle moveRight;
-            if(initialize_map(&map, fileName) == -1){
+            if(map_ctor(&map, fileName) == -1){
                 return EXIT_FAILURE;
             }
             initialize_triangle(map, &triangle, posR, posC);
