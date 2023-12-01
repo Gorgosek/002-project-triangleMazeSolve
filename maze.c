@@ -683,10 +683,8 @@ int search_maze(Map *map, int r, int c, int leftRight)
                 } else {
                     dirIndex++;
                 }
-                if(dirIndex != prevIndex){
-                    if(isborder(map, newPos.pos.r, newPos.pos.c, changeDirection[dirIndex]) == 0){
-                        break;
-                    }
+                if(isborder(map, newPos.pos.r, newPos.pos.c, changeDirection[dirIndex]) == 0){
+                    break;
                 }
             }
             prevIndex = dirIndex;
