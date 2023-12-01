@@ -481,32 +481,45 @@ int test(const char *fileName)
     return 0;
 }
 
-// TODO continue
+// TODO better remake for mazeboundary limit iterations
 int start_border(Map *map, int r, int c, int leftright)
 {
-    Triangle findEntrance;
-    Direction chosenDirOrder[5];
-    Direction rpathOrder[] = {0, L, R, U, D};
-    Direction lpathOrder[] = {0, L, R, U, D};
-
-    if(leftright == L){
-        memcpy(chosenDirOrder, lpathOrder, sizeof(chosenDirOrder));
-    } else if(leftright == R){
-        memcpy(chosenDirOrder, rpathOrder, sizeof(chosenDirOrder));
-    }
-    initialize_triangle(map, &findEntrance, r, c);
-    
-    if(findEntrance.mazeBoundary == 0){
+    Triangle chosenTriangle;
+    initialize_triangle(map, &chosenTriangle, r, c);
+    if(chosenTriangle.mazeBoundary == 0){
         fprintf(stderr, "Error wrong args R and C -> cannot start in the middle\n");
         return -1;
     }
 
-    Direction foundDirection;
+    Direction changeDirection[5];
+    Direction dirOrder[] = {0, L, R, U, D};;
+    Direction rpathOrder[] = {0, R, L, D, 4};
+    Direction lpathOrder[] = {0, L, R, U, 4};
+
+    if(leftright == L){
+        memcpy(changeDirection, lpathOrder, sizeof(dirOrder));
+    } else if(leftright == R){
+        memcpy(changeDirection, rpathOrder, sizeof(dirOrder));
+    }
+    if(chosenTriangle.type == CONTAINS_UP){
+        changeDirection[3] = U;
+    } else{
+        changeDirection[3] = D;
+    }
+    
+    
+
+    Direction entryDirection;
+    Direction temp;
+    Direction resultDirection;
+    int adjustForPath;
     for(int iterateDirs = 1; iterateDirs < NUM_OF_DIRECTIONS; iterateDirs++){
-        if(isborder(map, r, c, chosenDirOrder[iterateDirs]) == 0 && is_maze_boundary(findEntrance, chosenDirOrder[iterateDirs]) == 1){
-            foundDirection = chosenDirOrder[iterateDirs]; 
-            if(!((findEntrance.type == CONTAINS_UP && foundDirection == D) || (findEntrance.type == CONTAINS_DOWN && foundDirection == U))){
-                return foundDirection;
+        if(isborder(map, r, c, dirOrder[iterateDirs]) == 0 && is_maze_boundary(chosenTriangle, dirOrder[iterateDirs]) == 1){
+            entryDirection = dirOrder[iterateDirs]; 
+            if(!((chosenTriangle.type == CONTAINS_UP && entryDirection == D) || (chosenTriangle.type == CONTAINS_DOWN && entryDirection == U))){
+                if(entryDirection == D){
+                }
+                
             }
         }
     }
