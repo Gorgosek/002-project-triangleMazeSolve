@@ -737,10 +737,7 @@ int main(int argc, char *argv[])
             if(map_ctor(&map, fileName) == -1){
                 return EXIT_FAILURE;
             }
-            int x = get_cell_value(map, posR, posC);
-            if(x == -1){
-                return EXIT_FAILURE;
-            }
+            search_maze(map, posR, posC, R);
 
         }
         if(argc == 5 && strcmp(argv[argNum], "--lpath") == 0){
