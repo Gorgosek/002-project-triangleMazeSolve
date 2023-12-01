@@ -625,7 +625,7 @@ int search_maze(Map *map, int r, int c, int leftRight)
     }
 
     foundPath = 0;
-    printf("%d %d\n",startPos.pos.r,startPos.pos.c);
+    printf("%d,%d\n",startPos.pos.r,startPos.pos.c);
     int prevIndex = initialIndex;
     dirIndex = prevIndex;
     while(1){
@@ -647,7 +647,7 @@ int search_maze(Map *map, int r, int c, int leftRight)
             
 
         } else if(foundPath == 0){
-            printf("%d, %d\n", newPos.pos.r, newPos.pos.c);
+            printf("%d,%d\n", newPos.pos.r, newPos.pos.c);
             // Set right changeDirection array
             if(leftRight == L){
                 if(newPos.type == CONTAINS_UP){
