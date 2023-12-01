@@ -668,12 +668,6 @@ int search_maze(Map *map, int r, int c, int leftRight)
                     changeDirection[3] = D;
                 }
             }
-            // Reroll back to the start
-            // for(int formulateIndex = 1; formulateIndex < 5; formulateIndex++){
-            //     if(prevIndex == changeDirection[formulateIndex]){
-            //         dirIndex = formulateIndex;
-            //     }
-            // }
             dirIndex = prevIndex;
             while(1){
 
@@ -729,6 +723,8 @@ int main(int argc, char *argv[])
             printf("%s\n", test(fileName) == 0 ? "Valid" : "Invalid");
             return EXIT_SUCCESS;
         }
+
+        // RUNS --rpath with R dir
         if(strcmp(argv[argNum], "--rpath") == 0){
             if(argc != 5){
                 fprintf(stderr, "Error wrong number of arguments given see --help\n");
@@ -745,6 +741,8 @@ int main(int argc, char *argv[])
             search_maze(map, posR, posC, R);
 
         }
+    
+        // RUNS --lpath with L dir
         if(strcmp(argv[argNum], "--lpath") == 0){
             if(argc != 5){
                 fprintf(stderr, "Error wrong number of arguments given see --help\n");
