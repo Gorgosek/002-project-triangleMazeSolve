@@ -588,7 +588,7 @@ int search_maze(Map *map, int r, int c, int leftRight)
 
     int initialIndex = 0;
     for(int formulateIndex = 1; formulateIndex < 5; formulateIndex++){
-        if(initialDirection == changeDirection[formulateIndex]){
+        if((Direction)initialDirection == changeDirection[formulateIndex]){
             initialIndex = formulateIndex;
             break;
         }
@@ -612,7 +612,7 @@ int search_maze(Map *map, int r, int c, int leftRight)
     int foundPath = 0;
     int dirIndex = 0;
     for(int formulateIndex = 1; formulateIndex < 5; formulateIndex++){
-        if(initialDirection == changeDirection[formulateIndex]){
+        if((Direction)initialDirection == changeDirection[formulateIndex]){
             dirIndex = formulateIndex;
         }
     }
@@ -719,19 +719,24 @@ int main(int argc, char *argv[])
             return EXIT_SUCCESS;
         }
         
-        // checks for --test filename mandatory arg
-        if(argc == 3 && strcmp(argv[argNum], "--test") == 0){
+        // RUNS --test
+        if(strcmp(argv[argNum], "--test") == 0){
+            if(argc != 3){
+                fprintf(stderr, "Error wrong number of arguments given see --help\n");
+                return EXIT_FAILURE;
+            }
             fileName = argv[argNum+1];
             printf("%s\n", test(fileName) == 0 ? "Valid\n" : "Invalid\n");
             return EXIT_SUCCESS;
         }
-        if(argc == 5 && strcmp(argv[argNum], "--rpath") == 0){
+        if(strcmp(argv[argNum], "--rpath") == 0){
+            if(argc != 5){
+                fprintf(stderr, "Error wrong number of arguments given see --help\n");
+                return EXIT_FAILURE;
+            }
             posR = atoi(argv[argNum+1]);
             posC = atoi(argv[argNum+2]);
             fileName = argv[argNum+3];
-
-            // TODO SOMETHING
-            // JUST TRYING OUT 
 
             test(fileName);
             if(map_ctor(&map, fileName) == -1){
@@ -740,21 +745,21 @@ int main(int argc, char *argv[])
             search_maze(map, posR, posC, R);
 
         }
-        if(argc == 5 && strcmp(argv[argNum], "--lpath") == 0){
+        if(strcmp(argv[argNum], "--lpath") == 0){
+            if(argc != 5){
+                fprintf(stderr, "Error wrong number of arguments given see --help\n");
+                return EXIT_FAILURE;
+            }
             posR = atoi(argv[argNum+1]);
             posC = atoi(argv[argNum+2]);
             fileName = argv[argNum+3];
 
             // TESTING
+            test(fileName);
             if(map_ctor(&map, fileName) == -1){
-                map_dtor(&map);
                 return EXIT_FAILURE;
             }
-            // search_maze(map, posR,posC, L);
-            //printf("%d", start_border(map, posR,posC, L));
             search_maze(map, posR, posC, L);
-            
-
         }
 
     return EXIT_SUCCESS;
