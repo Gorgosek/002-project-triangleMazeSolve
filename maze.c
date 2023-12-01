@@ -756,7 +756,8 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
             }
             // search_maze(map, posR,posC, L);
-            printf("%d", start_border(map, posR,posC, L));
+            //printf("%d", start_border(map, posR,posC, L));
+            search_maze(map, posR, posC, L);
             
 
         }
