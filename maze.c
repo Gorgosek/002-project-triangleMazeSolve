@@ -590,6 +590,7 @@ int search_maze(Map *map, int r, int c, int leftRight)
     for(int formulateIndex = 1; formulateIndex < 5; formulateIndex++){
         if(initialDirection == changeDirection[formulateIndex]){
             initialIndex = formulateIndex;
+            break;
         }
     }
 
@@ -623,10 +624,12 @@ int search_maze(Map *map, int r, int c, int leftRight)
         return -1;
     }
 
-    foundPath = triangle_move_in(map, newPos, &newPos, initialDirection);
-    int prevDir = initialDirection;
+    foundPath = 0;
+    printf("%d %d\n",startPos.pos.r,startPos.pos.c);
+    int prevIndex = initialIndex;
+    dirIndex = prevIndex;
     while(1){
-
+        foundPath = triangle_move_in(map, newPos, &newPos, changeDirection[dirIndex]);
         if(dirIndex == 0){
             fprintf(stderr, "Error path finding couldn't continue\n");
             return -1;
@@ -639,6 +642,9 @@ int search_maze(Map *map, int r, int c, int leftRight)
             } else {
                 dirIndex++;
             }
+
+        } else if(foundPath == -1 && dirIndex == prevIndex){
+            
 
         } else if(foundPath == 0){
             printf("%d, %d\n", newPos.pos.r, newPos.pos.c);
@@ -664,23 +670,34 @@ int search_maze(Map *map, int r, int c, int leftRight)
                 }
             }
             // Reroll back to the start
-            for(int formulateIndex = 1; formulateIndex < 5; formulateIndex++){
-                if(prevDir == changeDirection[formulateIndex]){
-                    dirIndex = formulateIndex;
+            // for(int formulateIndex = 1; formulateIndex < 5; formulateIndex++){
+            //     if(prevIndex == changeDirection[formulateIndex]){
+            //         dirIndex = formulateIndex;
+            //     }
+            // }
+            dirIndex = prevIndex;
+            while(1){
+
+                if(dirIndex == 3){
+                    dirIndex = 1;
+                } else {
+                    dirIndex++;
+                }
+                if(dirIndex != prevIndex){
+                    if(isborder(map, newPos.pos.r, newPos.pos.c, changeDirection[dirIndex]) == 0){
+                        break;
+                    }
                 }
             }
-            if(dirIndex+1 == 3){
-                dirIndex = 1;
-            } else {
-                dirIndex++;
-            }
+            prevIndex = dirIndex;
             
 
         } else if(foundPath == -2){
             fprintf(stderr, "Error path finding couldn't continue\n");
             return -1;
+        } else if(foundPath == 1){
+            break;
         }
-        foundPath = triangle_move_in(map, newPos, &newPos, changeDirection[dirIndex]);
     }
     return 0;
     
@@ -734,13 +751,12 @@ int main(int argc, char *argv[])
             fileName = argv[argNum+3];
 
             // TESTING
-            Triangle triangle;
             if(map_ctor(&map, fileName) == -1){
                 map_dtor(&map);
                 return EXIT_FAILURE;
             }
-            initialize_triangle(map, &triangle, posR, posC);
-            search_maze(map, posR,posC, L);
+            // search_maze(map, posR,posC, L);
+            printf("%d", start_border(map, posR,posC, L));
             
 
         }
