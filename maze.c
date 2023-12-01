@@ -491,39 +491,60 @@ int start_border(Map *map, int r, int c, int leftright)
         return -1;
     }
 
-    Direction changeDirection[5];
+    Direction changeDirection[4];
     Direction dirOrder[] = {0, L, R, U, D};;
-    Direction rpathOrder[] = {0, R, L, D, 4};
-    Direction lpathOrder[] = {0, L, R, U, 4};
+    Direction rpathOrder[] = {0, R, L, D};
+    Direction lpathOrder[] = {0, L, R, U};
 
+    // Adjusts for triangle properties and move orders rpath == lpath in downpointing triangle where .type == CONTAINS_UP 
     if(leftright == L){
-        memcpy(changeDirection, lpathOrder, sizeof(dirOrder));
-    } else if(leftright == R){
-        memcpy(changeDirection, rpathOrder, sizeof(dirOrder));
-    }
-    if(chosenTriangle.type == CONTAINS_UP){
-        changeDirection[3] = U;
-    } else{
-        changeDirection[3] = D;
-    }
-    
-    
+        if(chosenTriangle.type == CONTAINS_UP){
+            memcpy(changeDirection, rpathOrder, sizeof(changeDirection));
+            changeDirection[3] = U;
+        }
+        else{
+            memcpy(changeDirection, lpathOrder, sizeof(changeDirection));
+            changeDirection[3] = D;
+        }
 
+    } else if(leftright == R){
+        if(chosenTriangle.type == CONTAINS_UP){
+            memcpy(changeDirection, lpathOrder, sizeof(changeDirection));
+            changeDirection[3] = U;
+        }
+        else{
+            memcpy(changeDirection, rpathOrder, sizeof(changeDirection));
+            changeDirection[3] = D;
+        }
+    }
+    
     Direction entryDirection;
-    Direction temp;
-    Direction resultDirection;
-    int adjustForPath;
-    for(int iterateDirs = 1; iterateDirs < NUM_OF_DIRECTIONS; iterateDirs++){
+    Direction resultDirection = 0;
+    const int adjustForPath = 1; 
+    for(int iterateDirs = 1; iterateDirs < NUM_OF_DIRECTIONS; iterateDirs++)
+    {
         if(isborder(map, r, c, dirOrder[iterateDirs]) == 0 && is_maze_boundary(chosenTriangle, dirOrder[iterateDirs]) == 1){
             entryDirection = dirOrder[iterateDirs]; 
             if(!((chosenTriangle.type == CONTAINS_UP && entryDirection == D) || (chosenTriangle.type == CONTAINS_DOWN && entryDirection == U))){
-                if(entryDirection == D){
+                for(int directions = 1; directions < 4; directions++){
+                    // Change direction by +1 index of changeDirection arr
+                    if(entryDirection == changeDirection[directions]){
+                        // Prevent overflowing
+                        if(entryDirection == D || entryDirection == U){
+                            resultDirection = changeDirection[adjustForPath];
+                            return resultDirection;
+                        }
+                        // FOR R or L
+                        resultDirection = changeDirection[directions+adjustForPath];
+                        return resultDirection;
+                    }
+
                 }
-                
             }
         }
     }
 
+    fprintf(stderr, "Error starting border couldn't be determined\n");
     return -1;
 }
 
@@ -533,8 +554,9 @@ int search_maze(Map *map, int r, int c, int leftRight)
 {
     Triangle startTriangle;
     initialize_triangle(map, &startTriangle, r, c);
-    Direction rPathDirOrder[] = {0, };
+    return leftRight;
 
+    return 0;
     
 
 }
