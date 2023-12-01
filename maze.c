@@ -210,6 +210,10 @@ bool isborder(Map *map, int r, int c, int border)
         case D:
             return isolate_bit_value(cellValue, UPDOWN_BIT);
         break;
+
+        default:
+            fprintf(stderr, "Error direction %d doesn't exist\n", border);
+
     }
 
     // To avoid warnings
@@ -276,11 +280,11 @@ int determine_maze_boundary(Map *map, Triangle triangle)
 }
 
 // Initializes a triangle structure
-void initialize_triangle(Map *map, Triangle *triangle, int r, int c)
+int initialize_triangle(Map *map, Triangle *triangle, int r, int c)
 {
     if(r < 1 || c < 1){
         fprintf(stderr, "Error initializing triangle\n");
-        return;
+        return -1;
     }
     // Initializes all necesarry values
     triangle->pos.r = r;
@@ -288,6 +292,7 @@ void initialize_triangle(Map *map, Triangle *triangle, int r, int c)
     triangle->type = determine_triangle_type(triangle->pos);
     triangle->borderValue = get_cell_value(map, r, c);
     triangle->mazeBoundary = determine_maze_boundary(map, *triangle);
+    return 0;
 }
 
 // Checks if a side in direction is a boundary of the maze using triangle.mazeBoundary values defined in determine_maze_boundary
@@ -307,7 +312,10 @@ bool is_maze_boundary(Triangle triangle, Direction checkDirection)
             return isolate_bit_value(mazeBoundary, UPDOWN_BIT);
         case D:
             return isolate_bit_value(mazeBoundary, UPDOWN_BIT);
-        break;
+            break;
+        default:
+            fprintf(stderr, "Error direction %d doesn't exist\n", checkDirection);
+
     }
 
     // To avoid warnings
@@ -381,14 +389,7 @@ int triangle_move_in(Map *map, Triangle triangleToMove, Triangle *resultingTrian
 
 }
 
-// TODO continue
-//int start_border(Map *map, int r, int c, int leftright)
-//{
-//    return -1;
-//}
-//
 // Checks if the contents and format of a file is Valid or Invalid for defining a matrix
-//
 int test(const char *fileName)
 {
 
@@ -439,9 +440,7 @@ int test(const char *fileName)
 
     fclose(file);
 
-    //
-    // CHECK IF NEIGHBORING BORDERS ARE SET CORRECTLY
-    //
+    // CHECK IF ADJACENED BORDERS ARE SET CORRECTLY
 
     if(map_ctor(&map, fileName) == -1){
         map_dtor(&map);
@@ -482,6 +481,40 @@ int test(const char *fileName)
     return 0;
 }
 
+// TODO continue
+int start_border(Map *map, int r, int c, int leftright)
+{
+    Triangle findEntrance;
+    Direction chosenDirOrder[5];
+    Direction rpathOrder[] = {0, L, R, U, D};
+    Direction lpathOrder[] = {0, L, R, U, D};
+
+    if(leftright == L){
+        memcpy(chosenDirOrder, lpathOrder, sizeof(chosenDirOrder));
+    } else if(leftright == R){
+        memcpy(chosenDirOrder, rpathOrder, sizeof(chosenDirOrder));
+    }
+    initialize_triangle(map, &findEntrance, r, c);
+    
+    if(findEntrance.mazeBoundary == 0){
+        fprintf(stderr, "Error wrong args R and C -> cannot start in the middle\n");
+        return -1;
+    }
+
+    Direction foundDirection;
+    for(int iterateDirs = 1; iterateDirs < NUM_OF_DIRECTIONS; iterateDirs++){
+        if(isborder(map, r, c, chosenDirOrder[iterateDirs]) == 0 && is_maze_boundary(findEntrance, chosenDirOrder[iterateDirs]) == 1){
+            foundDirection = chosenDirOrder[iterateDirs]; 
+            if(!((findEntrance.type == CONTAINS_UP && foundDirection == D) || (findEntrance.type == CONTAINS_DOWN && foundDirection == U))){
+                return foundDirection;
+            }
+        }
+    }
+
+    return -1;
+}
+
+
 // Used for --rpath a --lpath
 int search_maze(Map *map, int r, int c, int leftRight)
 {
@@ -500,7 +533,7 @@ int main(int argc, char *argv[])
     }
 
     // Variables used, Global Variable Map *map; is also being used
-    int posR = 0, posC = 0;
+    int posR = 0, posC = 0; // check if they're set correctly
     const char *fileName;
 
     // REMAKE
