@@ -546,7 +546,6 @@ int start_border(Map *map, int r, int c, int leftright)
     return -1;
 }
 
-
 // Used for --rpath a --lpath
 int search_maze(Map *map, int r, int c, int leftRight)
 {
@@ -585,6 +584,7 @@ int search_maze(Map *map, int r, int c, int leftRight)
             changeDirection[3] = D;
         }
     }
+    // finds index
 
     int initialIndex = 0;
     for(int formulateIndex = 1; formulateIndex < 5; formulateIndex++){
@@ -609,6 +609,7 @@ int search_maze(Map *map, int r, int c, int leftRight)
         movedSuccesfully = triangle_move_in(map, startPos, &startPos, changeDirection[initialIndex]);
     }
     
+    // Whole maze
     int foundPath = 0;
     int dirIndex = 0;
     for(int formulateIndex = 1; formulateIndex < 5; formulateIndex++){
@@ -619,18 +620,18 @@ int search_maze(Map *map, int r, int c, int leftRight)
     
     Triangle newPos;
 
-    if(initialize_triangle(map, &newPos, r, c) == -1){
+    if(initialize_triangle(map, &newPos, startPos.pos.r, startPos.pos.c) == -1){
         fprintf(stderr, "Error initializing inside path finding\n");
         return -1;
     }
 
-    foundPath = triangle_move_in(map, startPos, &newPos, changeDirection[dirIndex]);
+    int prevDirIndex = 0;
     while(foundPath != 1){
+
         if(dirIndex == 0){
             fprintf(stderr, "Error path finding couldn't continue\n");
             return -1;
         }
-
 
         if(foundPath == -1){
             // At the end of arr
@@ -642,7 +643,7 @@ int search_maze(Map *map, int r, int c, int leftRight)
 
         } else if(foundPath == 0){
             printf("%d, %d\n", newPos.pos.r, newPos.pos.c);
-            // Adjusts for triangle properties and move orders rpath == lpath in downpointing triangle where .type == CONTAINS_UP 
+            // Set right changeDirection array
             if(leftRight == L){
                 if(newPos.type == CONTAINS_UP){
                     memcpy(changeDirection, rpathOrder, sizeof(changeDirection));
@@ -664,11 +665,18 @@ int search_maze(Map *map, int r, int c, int leftRight)
                 }
             }
             // Reroll back to the start
-            for(int findNewDir = 1; findNewDir< 4; findNewDir++)
+            prevDirIndex = dirIndex;
+            for(int findNewDir = 1; findNewDir< 5; findNewDir++){
+                if(prevDirIndex){
+
+                }
+
+
+            }
                 if(dirIndex+1 == 3){
                     dirIndex = 1;
                 }
-                changeDirection[dirIndex]
+            changeDirection[dirIndex];
             
 
         } else if(foundPath == -2){
