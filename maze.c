@@ -392,6 +392,7 @@ int triangle_move_in(Map *map, Triangle triangleToMove, Triangle *resultingTrian
 // Checks if the contents and format of a file is Valid or Invalid for defining a matrix
 int test(const char *fileName)
 {
+    Map *map;
 
     int rows, cols;
     FILE *file = fopen(fileName, "r");
@@ -443,7 +444,6 @@ int test(const char *fileName)
     // CHECK IF ADJACENED BORDERS ARE SET CORRECTLY
 
     if(map_ctor(&map, fileName) == -1){
-        map_dtor(&map);
         return -1;
     }
 
@@ -457,7 +457,6 @@ int test(const char *fileName)
             initialize_triangle(map, &iterTriangle, row, col-1); // One behind
             if(isborder(map, iterTriangle.pos.r, iterTriangle.pos.c, R) != isborder(map, triangle.pos.r, triangle.pos.c, L)){
                 fprintf(stderr, "Error borders aren't defined correctly\n");
-                map_dtor(&map);
                 return -1;
             }
         }
@@ -471,7 +470,6 @@ int test(const char *fileName)
             if(determine_triangle_type(triangle.pos) == CONTAINS_DOWN && determine_triangle_type(iterTriangle.pos) == CONTAINS_UP){
                 if(isborder(map, iterTriangle.pos.r, iterTriangle.pos.c, U) != isborder(map, triangle.pos.r, triangle.pos.c, D)){
                     fprintf(stderr, "Error borders aren't defined correctly\n");
-                    map_dtor(&map);
                     return -1;
                 }
 
@@ -572,7 +570,7 @@ int main(int argc, char *argv[])
     const char *fileName;
 
     // REMAKE
-    for(int argNum = 1; argNum < argc; argNum++){
+    int argNum = 1;
         if(argc == 2 && strcmp(argv[argNum], "--help") == 0){
             printHelp();
             return EXIT_SUCCESS;
@@ -581,7 +579,7 @@ int main(int argc, char *argv[])
         // checks for --test filename mandatory arg
         if(argc == 3 && strcmp(argv[argNum], "--test") == 0){
             fileName = argv[argNum+1];
-            printf("%s\n", test(fileName) == 0 ? "Valid" : "Invalid");
+            printf("%s\n", test(fileName) == 0 ? "Valid\n" : "Invalid\n");
             return EXIT_SUCCESS;
         }
         if(argc == 5 && strcmp(argv[argNum], "--rpath") == 0){
@@ -600,7 +598,6 @@ int main(int argc, char *argv[])
             if(x == -1){
                 return EXIT_FAILURE;
             }
-            print_entire_matrix(map);
 
         }
         if(argc == 5 && strcmp(argv[argNum], "--lpath") == 0){
@@ -610,28 +607,15 @@ int main(int argc, char *argv[])
 
             // TESTING
             Triangle triangle;
-            Triangle moveRight;
             if(map_ctor(&map, fileName) == -1){
                 map_dtor(&map);
                 return EXIT_FAILURE;
             }
             initialize_triangle(map, &triangle, posR, posC);
-            int directionTest;
-            printf("Test directions L1 R2 U3 D4: ");
-            scanf("%d", &directionTest);
-
-            int state = triangle_move_in(map, triangle, &moveRight, (Direction)directionTest);
-
-            printf("%d\n%d\n%d %d, %s, %d %d \n",state, (Direction)directionTest, moveRight.pos.r,moveRight.pos.c, moveRight.type == CONTAINS_UP ? "UP" : "DOWN", moveRight.borderValue, moveRight.mazeBoundary);
-
-            // printf("%s", determine_triangle_type(triangle.pos) == CONTAINS_UP ? "UP": "DOWN");
-            // printf("%s", is_maze_boundary(triangle, L) ? "YES": "NO");
-
 
         }
 
-        // TODO SOMETHING
-    }
-
     return EXIT_SUCCESS;
 }
+
+
