@@ -53,7 +53,6 @@ typedef struct {
 } Triangle;
 
 // A Global variable that can be initialized by using map_ctor function
-Map *map;
 
 // Prints help onto the screen when using --help option
 void printHelp()
@@ -136,16 +135,13 @@ int map_ctor(Map **map, const char *fileName)
 }
 
 // Destructor for Map structure
-void map_dtor(Map **map)
-{
-    if(map != NULL) {
-        (*map)->rows = 0;
-        (*map)->rows = 0;
+void map_dtor(Map **map) {
+    if (map != NULL && *map != NULL) {
         free((*map)->cells);
-        free(map);
-    } 
+        free(*map);
+        *map = NULL;
+    }
 }
-
 
 //
 // Returns a value of a cell at row and column index like an array would
@@ -457,6 +453,7 @@ int test(const char *fileName)
             initialize_triangle(map, &iterTriangle, row, col-1); // One behind
             if(isborder(map, iterTriangle.pos.r, iterTriangle.pos.c, R) != isborder(map, triangle.pos.r, triangle.pos.c, L)){
                 fprintf(stderr, "Error borders aren't defined correctly\n");
+                map_dtor(&map);
                 return -1;
             }
         }
@@ -470,12 +467,14 @@ int test(const char *fileName)
             if(determine_triangle_type(triangle.pos) == CONTAINS_DOWN && determine_triangle_type(iterTriangle.pos) == CONTAINS_UP){
                 if(isborder(map, iterTriangle.pos.r, iterTriangle.pos.c, U) != isborder(map, triangle.pos.r, triangle.pos.c, D)){
                     fprintf(stderr, "Error borders aren't defined correctly\n");
+                    map_dtor(&map);
                     return -1;
                 }
 
             }
         }
     }
+    map_dtor(&map);
     return 0;
 }
 
@@ -711,6 +710,7 @@ int main(int argc, char *argv[])
     // Variables used, Global Variable Map *map; is also being used
     int posR = 0, posC = 0; // check if they're set correctly
     const char *fileName;
+    Map *map;
 
     // REMAKE
     int argNum = 1;
@@ -726,7 +726,7 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
             }
             fileName = argv[argNum+1];
-            printf("%s\n", test(fileName) == 0 ? "Valid\n" : "Invalid\n");
+            printf("%s\n", test(fileName) == 0 ? "Valid" : "Invalid");
             return EXIT_SUCCESS;
         }
         if(strcmp(argv[argNum], "--rpath") == 0){
@@ -762,6 +762,7 @@ int main(int argc, char *argv[])
             search_maze(map, posR, posC, L);
         }
 
+    map_dtor(&map);
     return EXIT_SUCCESS;
 }
 
