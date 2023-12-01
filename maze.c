@@ -596,24 +596,22 @@ int search_maze(Map *map, int r, int c, int leftRight)
     if(initialIndex == 0){
         return -1;
     }
-
-    int movedSuccesfully = triangle_move_in(map, startPos, &startPos, (Direction) initialDirection);
-    // Move starting triangle in position determined by start_border
-    while(movedSuccesfully != 0){
-            // At the end of arr
+    // Initial direction isn't in a border way
+    while(isborder(map, r, c, changeDirection[initialIndex]) != 0){
         if(initialIndex == 3){
             initialIndex = 1;
         } else {
             initialIndex++;
         }
-        movedSuccesfully = triangle_move_in(map, startPos, &startPos, changeDirection[initialIndex]);
+
     }
-    
+    initialDirection = changeDirection[initialIndex];
+
     // Whole maze
     int foundPath = 0;
     int dirIndex = 0;
     for(int formulateIndex = 1; formulateIndex < 5; formulateIndex++){
-        if(changeDirection[initialIndex] == changeDirection[formulateIndex]){
+        if(initialDirection == changeDirection[formulateIndex]){
             dirIndex = formulateIndex;
         }
     }
@@ -625,8 +623,9 @@ int search_maze(Map *map, int r, int c, int leftRight)
         return -1;
     }
 
-    int prevDirIndex = 0;
-    while(foundPath != 1){
+    foundPath = triangle_move_in(map, newPos, &newPos, initialDirection);
+    int prevDir = initialDirection;
+    while(1){
 
         if(dirIndex == 0){
             fprintf(stderr, "Error path finding couldn't continue\n");
@@ -665,18 +664,16 @@ int search_maze(Map *map, int r, int c, int leftRight)
                 }
             }
             // Reroll back to the start
-            prevDirIndex = dirIndex;
-            for(int findNewDir = 1; findNewDir< 5; findNewDir++){
-                if(prevDirIndex){
-
+            for(int formulateIndex = 1; formulateIndex < 5; formulateIndex++){
+                if(prevDir == changeDirection[formulateIndex]){
+                    dirIndex = formulateIndex;
                 }
-
-
             }
-                if(dirIndex+1 == 3){
-                    dirIndex = 1;
-                }
-            changeDirection[dirIndex];
+            if(dirIndex+1 == 3){
+                dirIndex = 1;
+            } else {
+                dirIndex++;
+            }
             
 
         } else if(foundPath == -2){
