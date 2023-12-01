@@ -342,14 +342,14 @@ int triangle_move_in(Map *map, Triangle triangleToMove, Triangle *resultingTrian
     // Checks if a triangle even has a side to move to 
     if(direction > D || direction < L){
         fprintf(stderr, "Error direction value doesn't exist\n");
-        return -1;
+        return -2;
     }
     if(triangleToMove.type == CONTAINS_UP && direction == D){
         fprintf(stderr, "Error cannot move in that direction wrong TriangleType\n");
-        return -1;
+        return -2;
     } else if(triangleToMove.type == CONTAINS_DOWN && direction == U){
         fprintf(stderr, "Error cannot move in that direction wrong TriangleType\n");
-        return -1;
+        return -2;
     }
 
     bool isBorderInDirection = isborder(map, triangleToMove.pos.r, triangleToMove.pos.c, direction);
@@ -550,10 +550,133 @@ int start_border(Map *map, int r, int c, int leftright)
 // Used for --rpath a --lpath
 int search_maze(Map *map, int r, int c, int leftRight)
 {
-    Triangle startTriangle;
-    initialize_triangle(map, &startTriangle, r, c);
-    return leftRight;
+    Triangle startPos;
+    initialize_triangle(map, &startPos, r, c);
 
+    int initialDirection = start_border(map, r, c, leftRight);
+    if(initialDirection == -1){
+        return -1;
+    }
+
+    Direction changeDirection[4];
+    Direction rpathOrder[] = {0, R, L, D};
+    Direction lpathOrder[] = {0, L, R, U};
+
+    //FIRST TRIANGLE
+
+    // Adjusts for triangle properties and move orders rpath == lpath in downpointing triangle where .type == CONTAINS_UP 
+    if(leftRight == L){
+        if(startPos.type == CONTAINS_UP){
+            memcpy(changeDirection, rpathOrder, sizeof(changeDirection));
+            changeDirection[3] = U;
+        }
+        else{
+            memcpy(changeDirection, lpathOrder, sizeof(changeDirection));
+            changeDirection[3] = D;
+        }
+
+    } else if(leftRight == R){
+        if(startPos.type == CONTAINS_UP){
+            memcpy(changeDirection, lpathOrder, sizeof(changeDirection));
+            changeDirection[3] = U;
+        }
+        else{
+            memcpy(changeDirection, rpathOrder, sizeof(changeDirection));
+            changeDirection[3] = D;
+        }
+    }
+
+    int initialIndex = 0;
+    for(int formulateIndex = 1; formulateIndex < 5; formulateIndex++){
+        if(initialDirection == changeDirection[formulateIndex]){
+            initialIndex = formulateIndex;
+        }
+    }
+
+    if(initialIndex == 0){
+        return -1;
+    }
+
+    int movedSuccesfully = triangle_move_in(map, startPos, &startPos, (Direction) initialDirection);
+    // Move starting triangle in position determined by start_border
+    while(movedSuccesfully != 0){
+            // At the end of arr
+        if(initialIndex == 3){
+            initialIndex = 1;
+        } else {
+            initialIndex++;
+        }
+        movedSuccesfully = triangle_move_in(map, startPos, &startPos, changeDirection[initialIndex]);
+    }
+    
+    int foundPath = 0;
+    int dirIndex = 0;
+    for(int formulateIndex = 1; formulateIndex < 5; formulateIndex++){
+        if(changeDirection[initialIndex] == changeDirection[formulateIndex]){
+            dirIndex = formulateIndex;
+        }
+    }
+    
+    Triangle newPos;
+
+    if(initialize_triangle(map, &newPos, r, c) == -1){
+        fprintf(stderr, "Error initializing inside path finding\n");
+        return -1;
+    }
+
+    foundPath = triangle_move_in(map, startPos, &newPos, changeDirection[dirIndex]);
+    while(foundPath != 1){
+        if(dirIndex == 0){
+            fprintf(stderr, "Error path finding couldn't continue\n");
+            return -1;
+        }
+
+
+        if(foundPath == -1){
+            // At the end of arr
+            if(dirIndex == 3){
+                dirIndex = 1;
+            } else {
+                dirIndex++;
+            }
+
+        } else if(foundPath == 0){
+            printf("%d, %d\n", newPos.pos.r, newPos.pos.c);
+            // Adjusts for triangle properties and move orders rpath == lpath in downpointing triangle where .type == CONTAINS_UP 
+            if(leftRight == L){
+                if(newPos.type == CONTAINS_UP){
+                    memcpy(changeDirection, rpathOrder, sizeof(changeDirection));
+                    changeDirection[3] = U;
+                }
+                else{
+                    memcpy(changeDirection, lpathOrder, sizeof(changeDirection));
+                    changeDirection[3] = D;
+                }
+
+            } else if(leftRight == R){
+                if(newPos.type == CONTAINS_UP){
+                    memcpy(changeDirection, lpathOrder, sizeof(changeDirection));
+                    changeDirection[3] = U;
+                }
+                else{
+                    memcpy(changeDirection, rpathOrder, sizeof(changeDirection));
+                    changeDirection[3] = D;
+                }
+            }
+            // Reroll back to the start
+            for(int findNewDir = 1; findNewDir< 4; findNewDir++)
+                if(dirIndex+1 == 3){
+                    dirIndex = 1;
+                }
+                changeDirection[dirIndex]
+            
+
+        } else if(foundPath == -2){
+            fprintf(stderr, "Error path finding couldn't continue\n");
+            return -1;
+        }
+        foundPath = triangle_move_in(map, newPos, &newPos, changeDirection[dirIndex]);
+    }
     return 0;
     
 
@@ -612,6 +735,8 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
             }
             initialize_triangle(map, &triangle, posR, posC);
+            search_maze(map, posR,posC, L);
+            
 
         }
 
